@@ -247,6 +247,27 @@ def aligner(_seqj, _seqi, \
     else:
         return (<object>aj)[::-1], (<object>ai)[::-1]
 
+def score_alignment(a, b, int gap_open, int gap_extend, matrix):
+    cdef char *al = a
+    cdef char *bl = b
+    cdef size_t l = stdlib.strlen(al), i
+    cdef int score = 0, this_score
+    assert stdlib.strlen(bl) == l, "alignment lengths must be the same"
+    cdef np.ndarray[DTYPE_INT, ndim=2] mat
+    mat = read_matrix(matrix)
+
+    cdef bint gap_started = 0
+
+    for i in range(l):
+        if al[i] == c"-" or bl[i] == c"-":
+            score += gap_extend if gap_started else gap_open
+            gap_started = 1
+        else:
+            this_score = mat[al[i], bl[i]]
+            score += this_score
+            gap_started = 0
+    return score
+
 
 
 if __name__ == '__main__':
