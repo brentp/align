@@ -156,6 +156,6 @@ def aligner(seqj, seqi, method='global', gap_open=-7, gap_extend=-7, \
 
 if __name__ == '__main__':
     # global
-    a, b = align('WW','WEW', method= 'global')
-    assert list(a) == ['W', '-', 'W']
-    assert list(b) == ['W', 'E', 'W']
+    a, b = aligner('WW','WEW', method= 'global')
+    assert a == 'W-W'
+    assert b == 'WEW'
