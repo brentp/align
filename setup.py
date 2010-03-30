@@ -7,7 +7,7 @@ try:
 except ImportError:
     cmdclass = None
 
-version = '0.0.1'
+version = '0.0.2'
 import numpy
 np_include = numpy.get_include()
 doc = open('README.rst').read()
@@ -28,6 +28,7 @@ setup(name='align',
       zip_safe=False,
       packages=['align'],
       package_dir={'align': 'align'},
+      package_data = {'align': ['data/*']},
       install_requires=['numpy'],
       #entry_points= { 'console_scripts': ['align = align:main'] },
     classifiers   = [

@@ -1,7 +1,10 @@
 import numpy as np
 cimport numpy as np
 cimport stdlib
+import os.path as op
 import sys
+
+
 
 cdef extern from "Python.h":
     ctypedef void PyObject
@@ -28,16 +31,24 @@ cdef object read_matrix(path, object cache={}):
     to an 'A' is stored in the matrix as:
         mat[ord('C'), ord('A')] = score
     as such, it's a direct array lookup from each pair in the alignment
-    to a score. this makes if very fast. the cost is in terms of space.
+    to a score. this makes it very fast. the cost is in terms of space.
     though it's usually less than 100*100.
     """
     if path in cache: return cache[path]
 
+
     cdef np.ndarray[DTYPE_INT, ndim=2] a
     cdef size_t ai = 0, i
     cdef int v, mat_size
+    if not op.exists(path):
+        if "/" in path: raise Exception("path for matrix %s doest not exist" \
+                                        % path)
+        mat_path = op.abspath(op.join(op.dirname(__file__), "data"))
+        fh = open(op.join(mat_path, path))
+    else:
+        fh = open(path)
 
-    fh = open(path)
+
     headers = None
     while headers is None:
         line = fh.readline().strip()
@@ -178,7 +189,7 @@ def aligner(_seqj, _seqi, \
                     pointer[i,j] = UP
                 elif max_score == left_score:
                     pointer[i,j] = LEFT
-            elif method == 2:
+            elif imethod == 2:
                 # In a semi-global alignment we want to consume as much as
                 # possible of the longer sequence.
                 if max_score == up_score:

@@ -1,10 +1,10 @@
-========================================
+++++++++++++++++++++++++++++++++++++++++
 Align: polite, proper sequence alignment
-========================================
+++++++++++++++++++++++++++++++++++++++++
 
-:Authors: Marcin Cieślik, Brent Pedersen (brentp)
-:Email: (marcin), bpederse@gmail.com
-:License: MIT
+    :Authors: Marcin Cieślik, Brent Pedersen (brentp)
+    :Email: (marcin), bpederse@gmail.com
+    :License: MIT
 
 .. contents ::
 
