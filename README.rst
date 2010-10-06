@@ -27,6 +27,10 @@ usage will change. currently ::
     >>> aligner('WW','WEW', method= 'global')
     ('W-W', 'WEW')
 
+    >>> aligner('WW','WEWWEW', method= 'glocal')
+    ('WW', 'WW')
+
+
     >>> aligner('TAATTC', 'TAAT', method='global', matrix=DNAFULL, gap_open=-10, gap_extend=-1)
     ('TAATTC', 'TAAT--')
 
