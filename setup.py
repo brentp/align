@@ -5,7 +5,7 @@ try:
     from Cython.Distutils import build_ext
     cmdclass = {'build_ext': build_ext}
 except ImportError:
-    cmdclass = None
+    cmdclass = {}
 
 version = '0.0.2'
 import numpy
