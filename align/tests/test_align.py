@@ -18,6 +18,13 @@ class TestAlignGlobal(unittest.TestCase):
                     method=self.method)
         assert r == ('AGEBANAN', 'ACEBAN--')
 
+ 
+
+class TestGlobalCFE(unittest.TestCase):
+    def test_it(self):
+        r = aligner('AAAAAAAAAAAAACCTGCGCCCCAAAAAAAAAAAAAAAAAAAA', 'CCTGCGCACCCC', method='global_cfe')
+        assert r == ('AAAAAAAAAAAAACCTGCGC-CCCAAAAAAAAAAAAAAAAAAAA', '-------------CCTGCGCACCCC-------------------')
+
 
 
 if __name__ == '__main__':

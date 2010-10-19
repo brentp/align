@@ -37,3 +37,5 @@ usage will change. currently ::
     >>> aligner('PYNCHAN', 'YNCH', method='local')
     ('YNCH', 'YNCH')
 
+    >>> aligner('AAAAAAAAAAAAACCTGCGCCCCAAAAAAAAAAAAAAAAAAAA', 'CCTGCGCACCCC', method='global_cfe')
+    ('AAAAAAAAAAAAACCTGCGC-CCCAAAAAAAAAAAAAAAAAAAA', '-------------CCTGCGCACCCC-------------------')
