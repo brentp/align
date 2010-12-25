@@ -1,6 +1,6 @@
 import numpy as np
 cimport numpy as np
-cimport stdlib
+from libc.string cimport strlen
 import os.path as op
 import sys
 
@@ -114,8 +114,9 @@ def aligner(_seqj, _seqi, \
 
     cdef int imethod = {"global": 0, "local": 1, "glocal": 2, "global_cfe": 3}[method]
 
-    cdef size_t max_j = stdlib.strlen(seqj)
-    cdef size_t max_i = stdlib.strlen(seqi)
+
+    cdef size_t max_j = strlen(seqj)
+    cdef size_t max_i = strlen(seqi)
     if max_i == max_j == 0:
         return "", ""
 
@@ -261,9 +262,9 @@ def aligner(_seqj, _seqi, \
 def score_alignment(a, b, int gap_open, int gap_extend, matrix):
     cdef char *al = a
     cdef char *bl = b
-    cdef size_t l = stdlib.strlen(al), i
+    cdef size_t l = strlen(al), i
     cdef int score = 0, this_score
-    assert stdlib.strlen(bl) == l, "alignment lengths must be the same"
+    assert strlen(bl) == l, "alignment lengths must be the same"
     cdef np.ndarray[DTYPE_INT, ndim=2] mat
     mat = read_matrix(matrix)
 
