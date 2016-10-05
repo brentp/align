@@ -1,5 +1,10 @@
 import numpy as np
 from .matrix import BLOSUM62, DNAFULL
+from collections import namedtuple
+
+AlignmentResult = namedtuple(
+    'AlignmentResult',
+    ['seq1', 'seq2'])
 
 def max_index(array):
     """
@@ -151,7 +156,8 @@ def aligner(seqj, seqi, method='global', gap_open=-7, gap_extend=-7, \
     align_i = "".join(align_i[::-1])
     align_j = "".join(align_j[::-1])
     #np.array(align_i.reverse())
-    return ((align_i, align_j) if flip else (align_j, align_i))
+    return (AlignmentResult(align_i, align_j)
+            if flip else AlignmentResult(align_j, align_i))
 
 
 if __name__ == '__main__':
