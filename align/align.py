@@ -14,7 +14,7 @@ def max_index(array):
     return idx
 
 def aligner(seqj, seqi, method='global', gap_open=-7, gap_extend=-7, \
-                                            gap_double=-7, matrix=BLOSUM62):
+            gap_double=-7, matrix=BLOSUM62, n_max_return=1):
     """
     Calculates the alignment of two sequences. The supported "methods" are
     "global" for a global Needleman-Wunsh algorithm, "local" for a local
@@ -38,7 +38,13 @@ def aligner(seqj, seqi, method='global', gap_open=-7, gap_extend=-7, \
         - gap_double (``float``) The gap-opening cost if a gap is already open
           in the other sequence.
         - matrix (``dict``) A score matrix dictionary.
+        - n_max_return (``int``) The maximum number of results to return in
+          case multiple alignments with the same score are found. If set to 1,
+          a single ``AlignmentResult`` object is returned. If set to values
+          larger than 1, a list containing ``AlignmentResult`` objects are
+          returned.
     """
+    assert n_max_return > 0
     NONE, LEFT, UP, DIAG = range(4) # NONE is 0
     max_j = len(seqj)
     max_i = len(seqi)
@@ -118,46 +124,87 @@ def aligner(seqj, seqi, method='global', gap_open=-7, gap_extend=-7, \
                 else:
                     pointer[i,j] = DIAG
 
-    align_j = []
-    align_i = []
-    if method == 'local':
-        # max anywhere
-        i, j = max_index(F)
-    elif method == 'glocal':
-        # max in last col
-        i, j = (F[:,-1].argmax(), max_j)
-    elif method == 'global_cfe':
-        # from i,j to max(max(last row), max(last col)) for free
-        row_max, col_idx = F[-1].max(), F[-1].argmax()
-        col_max, row_idx = F[:, -1].max(), F[:, -1].argmax()
-        if row_max > col_max:
-            pointer[-1,col_idx+1:] = LEFT
-        else:
-            pointer[row_idx+1:,-1] = UP
+    # TODO: break this big if-block apart
+    if n_max_return == 1:
+        if method == 'local':
+            # max anywhere
+            i, j = max_index(F)
+        elif method == 'glocal':
+            # max in last col
+            i, j = (F[:,-1].argmax(), max_j)
+        elif method == 'global_cfe':
+            # from i,j to max(max(last row), max(last col)) for free
+            row_max, col_idx = F[-1].max(), F[-1].argmax()
+            col_max, row_idx = F[:, -1].max(), F[:, -1].argmax()
+            if row_max > col_max:
+                pointer[-1,col_idx+1:] = LEFT
+            else:
+                pointer[row_idx+1:,-1] = UP
 
-    p = pointer[i, j]
-    while p != NONE:
-        if p == DIAG:
-            i -= 1
-            j -= 1
-            align_j.append(seqj[j])
-            align_i.append(seqi[i])
-        elif p == LEFT:
-            j -= 1
-            align_j.append(seqj[j])
-            align_i.append("-")
-        elif p == UP:
-            i -= 1
-            align_j.append("-")
-            align_i.append(seqi[i])
-        else:
-            raise Exception('wtf!')
+        align_j = []
+        align_i = []
         p = pointer[i, j]
-    align_i = "".join(align_i[::-1])
-    align_j = "".join(align_j[::-1])
-    #np.array(align_i.reverse())
-    return (AlignmentResult(align_i, align_j)
-            if flip else AlignmentResult(align_j, align_i))
+        while p != NONE:
+            if p == DIAG:
+                i -= 1
+                j -= 1
+                align_j.append(seqj[j])
+                align_i.append(seqi[i])
+            elif p == LEFT:
+                j -= 1
+                align_j.append(seqj[j])
+                align_i.append("-")
+            elif p == UP:
+                i -= 1
+                align_j.append("-")
+                align_i.append(seqi[i])
+            else:
+                raise Exception('wtf!')
+            p = pointer[i, j]
+        align_i = "".join(align_i[::-1])
+        align_j = "".join(align_j[::-1])
+        #np.array(align_i.reverse())
+        return (AlignmentResult(align_i, align_j)
+                if flip else AlignmentResult(align_j, align_i))
+    else:
+        ijs = []
+        if method == "glocal":
+            maxv_last_column = F[:, -1].max()
+            maxv_indices = np.argwhere(F[:, -1] == maxv_last_column)
+            ijs = [(i, max_j) for i in maxv_indices]
+        else:
+            raise NotImplementedError
+
+        results = []
+
+        for i, j in ijs:
+            align_j = []
+            align_i = []
+            p = pointer[i, j]
+            while p != NONE:
+                if p == DIAG:
+                    i -= 1
+                    j -= 1
+                    align_j.append(seqj[j])
+                    align_i.append(seqi[i])
+                elif p == LEFT:
+                    j -= 1
+                    align_j.append(seqj[j])
+                    align_i.append("-")
+                elif p == UP:
+                    i -= 1
+                    align_j.append("-")
+                    align_i.append(seqi[i])
+                else:
+                    raise Exception('wtf!')
+                p = pointer[i, j]
+            align_i = "".join(align_i[::-1])
+            align_j = "".join(align_j[::-1])
+            aln = (AlignmentResult(align_i, align_j)
+                   if flip else AlignmentResult(align_j, align_i))
+            results.append(aln)
+
+        return results
 
 
 if __name__ == '__main__':
