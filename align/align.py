@@ -1,5 +1,5 @@
 import numpy as np
-from matrix import BLOSUM62, DNAFULL
+from .matrix import BLOSUM62, DNAFULL
 
 def max_index(array):
     """
