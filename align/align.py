@@ -4,7 +4,7 @@ from collections import namedtuple
 
 AlignmentResult = namedtuple(
     'AlignmentResult',
-    ['seq1', 'seq2'])
+    ['seq1', 'seq2', 'pos1', 'pos2', 'score'])
 
 def max_index(array):
     """
@@ -164,20 +164,20 @@ def aligner(seqj, seqi, method='global', gap_open=-7, gap_extend=-7, \
         align_i = "".join(align_i[::-1])
         align_j = "".join(align_j[::-1])
         #np.array(align_i.reverse())
-        return (AlignmentResult(align_i, align_j)
-                if flip else AlignmentResult(align_j, align_i))
+        return (AlignmentResult(align_i, align_j, None, None)
+                if flip else AlignmentResult(align_j, align_i, None, None))
     else:
         ijs = []
         if method == "glocal":
-            maxv_last_column = F[:, -1].max()
-            maxv_indices = np.argwhere(F[:, -1] == maxv_last_column)
-            ijs = [(i, max_j) for i in maxv_indices]
+            max_score = F[:, -1].max()
+            maxv_indices = np.argwhere(F[:, -1] == max_score)[0]
+            ijs = [(i, max_j, max_score) for i in maxv_indices][:n_max_return]
         else:
             raise NotImplementedError
 
         results = []
 
-        for i, j in ijs:
+        for i, j, score in ijs:
             align_j = []
             align_i = []
             p = pointer[i, j]
@@ -200,8 +200,8 @@ def aligner(seqj, seqi, method='global', gap_open=-7, gap_extend=-7, \
                 p = pointer[i, j]
             align_i = "".join(align_i[::-1])
             align_j = "".join(align_j[::-1])
-            aln = (AlignmentResult(align_i, align_j)
-                   if flip else AlignmentResult(align_j, align_i))
+            aln = (AlignmentResult(align_i, align_j, i, j, score)
+                   if flip else AlignmentResult(align_j, align_i, j, i, score))
             results.append(aln)
 
         return results
