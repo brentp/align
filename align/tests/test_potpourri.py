@@ -1,5 +1,6 @@
 import unittest
 from align import aligner
+from align.matrix import DNAFULL
 
 class TestPotpourri(unittest.TestCase):
 
@@ -62,35 +63,35 @@ class TestPotpourri(unittest.TestCase):
         a,b = aligner('RLRR','RRER', method='global', gap_open=-1)
         assert list(a) == ['R', 'L', 'R', '-', 'R']
         assert list(b) == ['R', '-', 'R', 'E', 'R']
-        a, b = aligner('TAAT', 'TAATTC', method='global', matrix='DNA')
+        a, b = aligner('TAAT', 'TAATTC', method='global', matrix=DNAFULL)
         assert list(a) == ['T', 'A', 'A', 'T', '-', '-']
         assert list(b) == ['T', 'A', 'A', 'T', 'T', 'C']
         # global_cfe
-        a, b = aligner('TAAT', 'TAATTC', method='global_cfe', matrix='DNA')
+        a, b = aligner('TAAT', 'TAATTC', method='global_cfe', matrix=DNAFULL)
         assert list(a) == ['T', 'A', 'A', 'T', '-', '-']
         assert list(b) == ['T', 'A', 'A', 'T', 'T', 'C']
-        a, b = aligner('TCTAAT', 'TAAT', method='global_cfe', matrix='DNA')
+        a, b = aligner('TCTAAT', 'TAAT', method='global_cfe', matrix=DNAFULL)
         assert list(b) == ['-', '-','T', 'A', 'A', 'T' ]
         assert list(a) == ['T', 'C','T', 'A', 'A', 'T' ]
         # local
-        a, b = aligner('TCTAAT', 'TAAT', method='local', matrix='DNA')
+        a, b = aligner('TCTAAT', 'TAAT', method='local', matrix=DNAFULL)
         assert list(b) == ['T', 'A', 'A', 'T' ]
         assert list(a) == ['T', 'A', 'A', 'T' ]
-        a, b = aligner('TCTAAT', 'TAATCT', method='local', matrix='DNA')
+        a, b = aligner('TCTAAT', 'TAATCT', method='local', matrix=DNAFULL)
         assert list(b) == ['T', 'A', 'A', 'T' ]
         assert list(a) == ['T', 'A', 'A', 'T' ]
         # glocal
-        a, b = aligner('AAATAATAAA', 'TAAT', method='glocal', matrix='DNA')
+        a, b = aligner('AAATAATAAA', 'TAAT', method='glocal', matrix=DNAFULL)
         assert list(b) == ['T', 'A', 'A', 'T' ]
         assert list(a) == ['T', 'A', 'A', 'T' ]
-        a, b = aligner('AAATAATAAA', 'TATAT', method='glocal', gap_open=-1, matrix='DNA')
+        a, b = aligner('AAATAATAAA', 'TATAT', method='glocal', gap_open=-1, matrix=DNAFULL)
         assert list(a) == ['T', 'A', '-', 'A', 'T' ]
         assert list(b) == ['T', 'A', 'T', 'A', 'T' ]
 
-        a, b = aligner('TATATAAA', 'CCTATAT', method='glocal', gap_open=-1, matrix='DNA')
+        a, b = aligner('TATATAAA', 'CCTATAT', method='glocal', gap_open=-1, matrix=DNAFULL)
         assert (a, b) == ('--TATAT', 'CCTATAT' ), (a, b)
 
-        a, b = aligner('CCTATAT', 'TATATAAA',method='glocal', gap_open=-1, matrix='DNA')
+        a, b = aligner('CCTATAT', 'TATATAAA',method='glocal', gap_open=-1, matrix=DNAFULL)
         assert list(b) == ['-', '-', 'T', 'A', 'T', 'A', 'T' ]
         assert list(a) == ['C', 'C', 'T', 'A', 'T', 'A', 'T' ]
         # old
@@ -124,7 +125,7 @@ class TestPotpourri(unittest.TestCase):
         a, b = aligner('PAA', 'PA', method='global_cfe')
         assert list(a) == ['P','A','A']
         assert list(b) == ['P','A','-']
-        a, b = aligner('TAATTC', 'TAAT', method='global', matrix='DNA', gap_open=-10, gap_extend=-1)
+        a, b = aligner('TAATTC', 'TAAT', method='global', matrix=DNAFULL, gap_open=-10, gap_extend=-1)
         assert list(a) == ['T', 'A', 'A', 'T', 'T', 'C']
         assert list(b) == ['T', 'A', 'A', 'T', '-', '-']
 

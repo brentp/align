@@ -1,5 +1,5 @@
 import unittest
-#from align.matrix import DNAFULL, BLOSUM62
+from align.matrix import BLOSUM62
 from align import aligner
 
 class TestAlignGlobal(unittest.TestCase):
@@ -14,9 +14,9 @@ class TestAlignGlobal(unittest.TestCase):
     def test_score(self):
         s0 = "AGEBANAN"
         s1 = "ACEBAN"
-        r = aligner(s0, s1, gap_extend=-1, gap_open=-2, matrix="BLOSUM62",
+        r = aligner(s0, s1, gap_extend=-1, gap_open=-2, matrix=BLOSUM62,
                     method=self.method)
-        assert r == ('AGEBANAN', 'ACEBAN--')
+        assert (r.seq1, r.seq2) == ('AGEBANAN', 'ACEBAN--')
 
  
 
