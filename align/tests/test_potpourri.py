@@ -61,9 +61,6 @@ class TestPotpourri(unittest.TestCase):
                                   'K', 'N', 'C', 'A', 'N', 'T', 'H']
         assert list(aln.seq2) == ['-', 'P', 'R', 'E', 'K', 'R', 'L', 'I', '-',
                                   '-', '-', 'C', 'A', 'N', '-', '-']
-        aln = aligner('CPEL', 'PREK', method='global', gap_open=-6.)
-        # assert list(aln.seq1) == ['C', 'P', 'E', 'L']
-        # assert list(aln.seq2) == ['P', 'R', 'E', 'K']
         aln = aligner('CPEL', 'PREK', method='global', gap_open=-5)
         assert list(aln.seq1) == ['C', 'P', '-', 'E', 'L']
         assert list(aln.seq2) == ['-', 'P', 'R', 'E', 'K']
