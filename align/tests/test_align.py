@@ -7,9 +7,9 @@ class TestAlignGlobal(unittest.TestCase):
 
     def test_all(self):
         r = aligner("CELECANTH", "PELICAN", method=self.method)
-        assert r ==  ('CELECANTH', 'PELICAN--'), r
+        assert (r.seq1, r.seq2) ==  ('CELECANTH', 'PELICAN--'), r
         r = aligner("PELICAN", "CELECANTH", method=self.method)
-        assert r == ('PELICAN--', 'CELECANTH')
+        assert (r.seq1, r.seq2) == ('PELICAN--', 'CELECANTH')
 
     def test_score(self):
         s0 = "AGEBANAN"
@@ -23,7 +23,7 @@ class TestAlignGlobal(unittest.TestCase):
 class TestGlobalCFE(unittest.TestCase):
     def test_it(self):
         r = aligner('AAAAAAAAAAAAACCTGCGCCCCAAAAAAAAAAAAAAAAAAAA', 'CCTGCGCACCCC', method='global_cfe')
-        assert r == ('AAAAAAAAAAAAACCTGCGC-CCCAAAAAAAAAAAAAAAAAAAA', '-------------CCTGCGCACCCC-------------------')
+        assert (r.seq1, r.seq2) == ('AAAAAAAAAAAAACCTGCGC-CCCAAAAAAAAAAAAAAAAAAAA', '-------------CCTGCGCACCCC-------------------')
 
 
 

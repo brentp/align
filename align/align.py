@@ -164,8 +164,8 @@ def aligner(seqj, seqi, method='global', gap_open=-7, gap_extend=-7, \
         align_i = "".join(align_i[::-1])
         align_j = "".join(align_j[::-1])
         #np.array(align_i.reverse())
-        return (AlignmentResult(align_i, align_j, None, None)
-                if flip else AlignmentResult(align_j, align_i, None, None))
+        return (AlignmentResult(align_i, align_j, None, None, None)
+                if flip else AlignmentResult(align_j, align_i, None, None, None))
     else:
         ijs = []
         if method == "glocal":
