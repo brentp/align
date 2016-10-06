@@ -11,10 +11,18 @@ except ImportError:
 
 import numpy
 
+# TODO: how to make this non-install-breaking?
 np_include = numpy.get_include()
 version = '0.0.2'
 
-doc = open('README.rst').read()
+with open('README.rst') as src:
+    doc = src.read()
+
+with open('requirements.txt') as src:
+    requirements = [line.strip() for line in src]
+
+with open('requirements-dev.txt') as src:
+    test_requirements = [line.strip() for line in src]
 
 setup(name='align',
       version=version,
@@ -36,7 +44,8 @@ setup(name='align',
       packages=['align'],
       package_dir={'align': 'align'},
       package_data={'align': ['data/*']},
-      install_requires=['numpy'],
+      install_requires=requirements,
+      test_require=test_requirements,
       classifiers=[
           'Development Status :: 3 - Alpha',
           'Intended Audience :: Developers',
