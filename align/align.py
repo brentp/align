@@ -211,10 +211,3 @@ def aligner(seqj, seqi, method='global', gap_open=-7, gap_extend=-7,
             results.append(aln)
 
         return results
-
-
-if __name__ == '__main__':
-    # global
-    a, b = aligner('WW', 'WEW', method='global')
-    assert a == 'W-W'
-    assert b == 'WEW'
