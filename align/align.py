@@ -6,12 +6,6 @@ AlignmentResult = namedtuple(
     'AlignmentResult',
     ['seq1', 'seq2', 'pos1', 'pos2', 'score'])
 
-def max_index(array):
-    """
-    """
-    max_value = array.argmax()
-    idx = np.unravel_index(max_value, array.shape)
-    return idx
 
 def aligner(seqj, seqi, method='global', gap_open=-7, gap_extend=-7, \
             gap_double=-7, matrix=BLOSUM62, n_max_return=1):
@@ -128,7 +122,7 @@ def aligner(seqj, seqi, method='global', gap_open=-7, gap_extend=-7, \
     if n_max_return == 1:
         if method == 'local':
             # max anywhere
-            i, j = max_index(F)
+            i, j = np.unravel_index(F.argmax(), F.shape)
         elif method == 'glocal':
             # max in last col
             i, j = (F[:,-1].argmax(), max_j)
