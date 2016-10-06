@@ -1,4 +1,6 @@
-from setuptools import setup, find_packages
+# -*- coding: utf-8 -*-
+
+from setuptools import setup
 from distutils.extension import Extension
 
 try:
@@ -7,9 +9,11 @@ try:
 except ImportError:
     cmdclass = {}
 
-version = '0.0.2'
 import numpy
+
 np_include = numpy.get_include()
+version = '0.0.2'
+
 doc = open('README.rst').read()
 
 setup(name='align',
@@ -17,7 +21,10 @@ setup(name='align',
       cmdclass=cmdclass,
       description="polite, proper sequence alignment",
       long_description=doc,
-      ext_modules=[ Extension("align/calign", sources=["align/calign.c"], include_dirs=[np_include, "align"])],
+      ext_modules=[
+          Extension("align/calign",
+                    sources=["align/calign.c"],
+                    include_dirs=[np_include, "align"])],
       keywords='sequence bioinformatics alignment text',
       url='http://github.com/brentp/align/',
       author='brentp',
@@ -28,18 +35,16 @@ setup(name='align',
       zip_safe=False,
       packages=['align'],
       package_dir={'align': 'align'},
-      package_data = {'align': ['data/*']},
+      package_data={'align': ['data/*']},
       install_requires=['numpy'],
-      #entry_points= { 'console_scripts': ['align = align:main'] },
-    classifiers   = [
-        'Development Status :: 3 - Alpha',
-        'Intended Audience :: Developers',
-        'Intended Audience :: Science/Research',
-        'License :: OSI Approved :: BSD License',
-        'Operating System :: OS Independent',
-        'Programming Language :: Python',
-        'Topic :: Scientific/Engineering :: Bio-Informatics',
-        'Topic :: Scientific/Engineering',
-        'Topic :: Text Processing'
-        ],
-)
+      classifiers=[
+          'Development Status :: 3 - Alpha',
+          'Intended Audience :: Developers',
+          'Intended Audience :: Science/Research',
+          'License :: OSI Approved :: BSD License',
+          'Operating System :: OS Independent',
+          'Programming Language :: Python',
+          'Topic :: Scientific/Engineering :: Bio-Informatics',
+          'Topic :: Scientific/Engineering',
+          'Topic :: Text Processing'
+      ])
