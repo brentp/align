@@ -1,20 +1,29 @@
-import numpy as np
-from .matrix import BLOSUM62, DNAFULL
+# -*- coding: utf-8 -*-
+
 from collections import namedtuple
 
+import numpy as np
+
+from .matrix import BLOSUM62
+
+
+# Container for alignment result
 AlignmentResult = namedtuple(
     'AlignmentResult',
     ['seq1', 'seq2', 'pos1', 'pos2', 'score'])
 
 
-def aligner(seqj, seqi, method='global', gap_open=-7, gap_extend=-7, \
+def aligner(seqj, seqi, method='global', gap_open=-7, gap_extend=-7,
             gap_double=-7, matrix=BLOSUM62, n_max_return=1):
-    """
-    Calculates the alignment of two sequences. The supported "methods" are
-    "global" for a global Needleman-Wunsh algorithm, "local" for a local
-    Smith-Waterman alignment, "global_cfe" for a global alignment with cost-free
-    ends and "glocal" for an alignment which is "global" only with respect to
-    the shorter sequence, this is also known as a "semi-global" alignment."
+    """Calculates the alignment of two sequences.
+
+    The supported "methods" are:
+        * "global" for a global Needleman-Wunsh algorithm
+        * "local" for a local Smith-Waterman alignment
+        * "global_cfe" for a global alignment with cost-free ends
+        * "glocal" for an alignment which is "global" only with respect to
+          the shorter sequence (also known as a "semi-global" alignment)
+
     Returns the aligned (sub)sequences as character arrays.
 
     Gotoh, O. (1982). J. Mol. Biol. 162, 705-708.
@@ -39,7 +48,7 @@ def aligner(seqj, seqi, method='global', gap_open=-7, gap_extend=-7, \
           returned.
     """
     assert n_max_return > 0
-    NONE, LEFT, UP, DIAG = range(4) # NONE is 0
+    NONE, LEFT, UP, DIAG = range(4)  # NONE is 0
     max_j = len(seqj)
     max_i = len(seqi)
 
@@ -55,68 +64,71 @@ def aligner(seqj, seqi, method='global', gap_open=-7, gap_extend=-7, \
     I.fill(-np.inf)
     J = np.ndarray((max_i + 1, max_j + 1), dtype=np.float32)
     J.fill(-np.inf)
-    pointer = np.zeros((max_i + 1, max_j + 1), dtype=np.uint) # NONE
+    pointer = np.zeros((max_i + 1, max_j + 1), dtype=np.uint)  # NONE
 
     if method == 'global':
         pointer[0, 1:] = LEFT
         pointer[1:, 0] = UP
-        F[0, 1:] = gap_open + gap_extend * np.arange(0, max_j, dtype=np.float32)
-        F[1:, 0] = gap_open + gap_extend * np.arange(0, max_i, dtype=np.float32)
+        F[0, 1:] = gap_open + gap_extend * \
+            np.arange(0, max_j, dtype=np.float32)
+        F[1:, 0] = gap_open + gap_extend * \
+            np.arange(0, max_i, dtype=np.float32)
     elif method == 'global_cfe':
         pointer[0, 1:] = LEFT
         pointer[1:, 0] = UP
     elif method == 'glocal':
         pointer[0, 1:] = LEFT
-        F[0, 1:] = gap_open + gap_extend * np.arange(0, max_j, dtype=np.float32)
+        F[0, 1:] = gap_open + gap_extend * \
+            np.arange(0, max_j, dtype=np.float32)
 
     for i in range(1, max_i + 1):
         ci = seqi[i - 1]
         for j in range(1, max_j + 1):
             cj = seqj[j - 1]
             # I
-            I[i,j] = max(
+            I[i, j] = max(
                          F[i, j - 1] + gap_open,
                          I[i, j - 1] + gap_extend,
                          J[i, j - 1] + gap_double)
             # J
-            J[i,j] = max(
+            J[i, j] = max(
                          F[i - 1, j] + gap_open,
                          J[i - 1, j] + gap_extend,
                          I[i - 1, j] + gap_double)
             # F
             diag_score = F[i - 1, j - 1] + matrix[cj][ci]
             left_score = I[i, j]
-            up_score   = J[i, j]
+            up_score = J[i, j]
             max_score = max(diag_score, up_score, left_score)
 
-            F[i,j] = max(0, max_score) if method == 'local' else max_score
+            F[i, j] = max(0, max_score) if method == 'local' else max_score
 
             if method == 'local':
-                if F[i,j] == 0:
-                    pass # point[i,j] = NONE
+                if F[i, j] == 0:
+                    pass  # point[i,j] = NONE
                 elif max_score == diag_score:
-                    pointer[i,j] = DIAG
+                    pointer[i, j] = DIAG
                 elif max_score == up_score:
-                    pointer[i,j] = UP
+                    pointer[i, j] = UP
                 elif max_score == left_score:
-                    pointer[i,j] = LEFT
+                    pointer[i, j] = LEFT
             elif method == 'glocal':
                 # In a semi-global alignment we want to consume as much as
                 # possible of the longer sequence.
                 if max_score == up_score:
-                    pointer[i,j] = UP
+                    pointer[i, j] = UP
                 elif max_score == diag_score:
-                    pointer[i,j] = DIAG
+                    pointer[i, j] = DIAG
                 elif max_score == left_score:
-                    pointer[i,j] = LEFT
+                    pointer[i, j] = LEFT
             else:
                 # global
                 if max_score == up_score:
-                    pointer[i,j] = UP
+                    pointer[i, j] = UP
                 elif max_score == left_score:
-                    pointer[i,j] = LEFT
+                    pointer[i, j] = LEFT
                 else:
-                    pointer[i,j] = DIAG
+                    pointer[i, j] = DIAG
 
     # TODO: break this big if-block apart
     if n_max_return == 1:
@@ -125,15 +137,15 @@ def aligner(seqj, seqi, method='global', gap_open=-7, gap_extend=-7, \
             i, j = np.unravel_index(F.argmax(), F.shape)
         elif method == 'glocal':
             # max in last col
-            i, j = (F[:,-1].argmax(), max_j)
+            i, j = (F[:, -1].argmax(), max_j)
         elif method == 'global_cfe':
             # from i,j to max(max(last row), max(last col)) for free
             row_max, col_idx = F[-1].max(), F[-1].argmax()
             col_max, row_idx = F[:, -1].max(), F[:, -1].argmax()
             if row_max > col_max:
-                pointer[-1,col_idx+1:] = LEFT
+                pointer[-1, col_idx+1:] = LEFT
             else:
-                pointer[row_idx+1:,-1] = UP
+                pointer[row_idx+1:, -1] = UP
 
         align_j = []
         align_i = []
@@ -157,9 +169,9 @@ def aligner(seqj, seqi, method='global', gap_open=-7, gap_extend=-7, \
             p = pointer[i, j]
         align_i = "".join(align_i[::-1])
         align_j = "".join(align_j[::-1])
-        #np.array(align_i.reverse())
         return (AlignmentResult(align_i, align_j, None, None, None)
-                if flip else AlignmentResult(align_j, align_i, None, None, None))
+                if flip else AlignmentResult(align_j, align_i, None, None,
+                                             None))
     else:
         ijs = []
         if method == "glocal":
@@ -203,6 +215,6 @@ def aligner(seqj, seqi, method='global', gap_open=-7, gap_extend=-7, \
 
 if __name__ == '__main__':
     # global
-    a, b = aligner('WW','WEW', method= 'global')
+    a, b = aligner('WW', 'WEW', method='global')
     assert a == 'W-W'
     assert b == 'WEW'
