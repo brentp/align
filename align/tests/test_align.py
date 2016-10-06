@@ -10,13 +10,15 @@ class TestAlignGlobal(unittest.TestCase):
 
     method = "global"
 
-    def test_all(self):
+    def test_global1(self):
         r = aligner("CELECANTH", "PELICAN", method=self.method)
         assert (r.seq1, r.seq2) == ('CELECANTH', 'PELICAN--'), r
+
+    def test_global2(self):
         r = aligner("PELICAN", "CELECANTH", method=self.method)
         assert (r.seq1, r.seq2) == ('PELICAN--', 'CELECANTH')
 
-    def test_score(self):
+    def test_global3(self):
         s0 = "AGEBANAN"
         s1 = "ACEBAN"
         r = aligner(s0, s1, gap_extend=-1, gap_open=-2, matrix=BLOSUM62,
@@ -28,7 +30,7 @@ class TestGlobalCFE(unittest.TestCase):
 
     method = 'global_cfe'
 
-    def test_it(self):
+    def test_global_cfe1(self):
         r = aligner(
             'AAAAAAAAAAAAACCTGCGCCCCAAAAAAAAAAAAAAAAAAAA',
             'CCTGCGCACCCC', method=self.method)
