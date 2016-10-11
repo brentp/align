@@ -4,7 +4,7 @@ Align: polite, proper sequence alignment
 
     :Authors: Marcin Cieślik, Brent Pedersen (brentp)
     :Email: (marcin), bpederse@gmail.com
-    :License: MIT
+    :License: BSD
 
 .. contents ::
 
