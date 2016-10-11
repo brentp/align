@@ -133,72 +133,54 @@ def aligner(seqj, seqi, method='global', gap_open=-7, gap_extend=-7,
 
     # container for traceback coordinates
     ij_pairs = []
-    if n_max_return == 1:
-        if method == 'local':
-            # max anywhere
-            i, j = np.unravel_index(F.argmax(), F.shape)
-        elif method == "glocal":
-            # max in last col
-            i, j = (F[:, -1].argmax(), max_j)
-        elif method == "global_cfe":
-            # from i,j to max(max(last row), max(last col)) for free
-            row_max = F[-1].max()
-            col_max = F[:, -1].max()
-            if row_max > col_max:
-                col_idx = F[-1].argmax()
-                pointer[-1, col_idx+1:] = LEFT
-            else:
-                row_idx = F[:, -1].argmax()
-                pointer[row_idx+1:, -1] = UP
-        # for global, i and j are already set from the previous iteration
-        ij_pairs.append((i, j))
-    else:
-        if method == "local":
-            # max anywhere
-            maxv_indices = np.argwhere(F == F.max())[:n_max_return]
-            for index in maxv_indices:
-                ij_pairs.append(index)
-        elif method == "glocal":
-            # max in last col
-            max_score = F[:, -1].max()
-            maxi_indices = np.argwhere(F[:, -1] == F[:, -1].max())\
-                .flatten()[:n_max_return]
-            for i in maxi_indices:
-                ij_pairs.append((i, max_j))
-        elif method == "global_cfe":
-            # from i,j to max(max(last row), max(last col)) for free
-            row_max = F[-1].max()
-            col_max = F[:, -1].max()
-            # expecting max to exist on either last column or last row
-            if row_max > col_max:
-                col_idces = np.argwhere(F[-1] == row_max).flatten()
+    if method == "local":
+        # max anywhere
+        maxv_indices = np.argwhere(F == F.max())[:n_max_return]
+        for index in maxv_indices:
+            ij_pairs.append(index)
+    elif method == "glocal":
+        # max in last col
+        max_score = F[:, -1].max()
+        maxi_indices = np.argwhere(F[:, -1] == F[:, -1].max())\
+            .flatten()[:n_max_return]
+        for i in maxi_indices:
+            ij_pairs.append((i, max_j))
+    elif method == "global_cfe":
+        # from i,j to max(max(last row), max(last col)) for free
+        row_max = F[-1].max()
+        col_max = F[:, -1].max()
+        # expecting max to exist on either last column or last row
+        if row_max > col_max:
+            col_idces = np.argwhere(F[-1] == row_max).flatten()
+            pointer[-1, min(col_idces)+1:] = LEFT
+            ij_pairs.append((i, j))
+        elif row_max < col_max:
+            row_idces = np.argwhere(F[:, -1] == col_max).flatten()
+            pointer[min(row_idces)+1:, -1] = UP
+            ij_pairs.append((i, j))
+        # special case: max is on last col, last row
+        elif row_max == col_max == F[i, j]:
+            # tiebreaker between row/col is whichever has more max scores
+            # assumption: not counting the corner cell, the last row
+            # and the last column do not have the same number of max scores
+            col_idces = np.argwhere(F[-1] == row_max).flatten()
+            row_idces = np.argwhere(F[:, -1] == col_max).flatten()
+            if len(col_idces) > len(row_idces):
                 pointer[-1, min(col_idces)+1:] = LEFT
-            elif row_max < col_max:
-                row_idces = np.argwhere(F[:, -1] == col_max).flatten()
+                ij_pairs.append((i, j))
+            elif len(col_idces) < len(row_idces):
                 pointer[min(row_idces)+1:, -1] = UP
-            # special case: max is on last col, last row
-            elif row_max == col_max == F[i, j]:
-                # tiebreaker between row/col is whichever has more max scores
-                # assumption: not counting the corner cell, the last row
-                # and the last column do not have the same number of max scores
-                col_idces = np.argwhere(F[-1] == row_max).flatten()
-                row_idces = np.argwhere(F[:, -1] == col_max).flatten()
-                if len(col_idces) > len(row_idces):
-                    pointer[-1, min(col_idces)+1:] = LEFT
-                    for cid in col_idces:
-                        ij_pairs.append((max_i, cid))
-                elif len(col_idces) < len(row_idces):
-                    pointer[min(row_idces)+1:, -1] = UP
-                    for rid in row_idces:
-                        ij_pairs.append((rid, max_j))
-                else:
-                    raise RuntimeError("Unexpected multiple maximum global_cfe"
-                                       " scores.")
+                ij_pairs.append((i, j))
+            elif len(col_idces) == len(row_idces) == 1:
+                ij_pairs.append((i, j))
             else:
-                raise RuntimeError("Unexpected global_cfe scenario.")
+                raise RuntimeError("Unexpected multiple maximum global_cfe"
+                                   " scores.")
         else:
-            # method must be global at this point
-            ij_pairs.append(i, j)
+            raise RuntimeError("Unexpected global_cfe scenario.")
+    else:
+        # method must be global at this point
+        ij_pairs.append((i, j))
 
     results = []
     for cur_i, (i, j) in enumerate(ij_pairs):
