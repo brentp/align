@@ -45,9 +45,10 @@ def aligner(seqj, seqi, method='global', gap_open=-7, gap_extend=-7,
           case multiple alignments with the same score are found. If set to 1,
           a single ``AlignmentResult`` object is returned. If set to values
           larger than 1, a list containing ``AlignmentResult`` objects are
-          returned.
+          returned. If set to `None`, all alignments with the maximum score
+          are returned.
     """
-    assert n_max_return > 0
+    assert n_max_return > 0 or n_max_return is None
     NONE, LEFT, UP, DIAG = range(4)  # NONE is 0
     max_j = len(seqj)
     max_i = len(seqi)
@@ -130,25 +131,80 @@ def aligner(seqj, seqi, method='global', gap_open=-7, gap_extend=-7,
                 else:
                     pointer[i, j] = DIAG
 
-    # TODO: break this big if-block apart
+    # container for traceback coordinates
+    ij_pairs = []
     if n_max_return == 1:
         if method == 'local':
             # max anywhere
             i, j = np.unravel_index(F.argmax(), F.shape)
-        elif method == 'glocal':
+        elif method == "glocal":
             # max in last col
             i, j = (F[:, -1].argmax(), max_j)
-        elif method == 'global_cfe':
+        elif method == "global_cfe":
             # from i,j to max(max(last row), max(last col)) for free
-            row_max, col_idx = F[-1].max(), F[-1].argmax()
-            col_max, row_idx = F[:, -1].max(), F[:, -1].argmax()
+            row_max = F[-1].max()
+            col_max = F[:, -1].max()
             if row_max > col_max:
+                col_idx = F[-1].argmax()
                 pointer[-1, col_idx+1:] = LEFT
             else:
+                row_idx = F[:, -1].argmax()
                 pointer[row_idx+1:, -1] = UP
+        # for global, i and j are already set from the previous iteration
+        ij_pairs.append((i, j))
+    else:
+        if method == "local":
+            # max anywhere
+            maxv_indices = np.argwhere(F == F.max())[:n_max_return]
+            for index in maxv_indices:
+                ij_pairs.append(index)
+        elif method == "glocal":
+            # max in last col
+            max_score = F[:, -1].max()
+            maxi_indices = np.argwhere(F[:, -1] == F[:, -1].max())\
+                .flatten()[:n_max_return]
+            for i in maxi_indices:
+                ij_pairs.append((i, max_j))
+        elif method == "global_cfe":
+            # from i,j to max(max(last row), max(last col)) for free
+            row_max = F[-1].max()
+            col_max = F[:, -1].max()
+            # expecting max to exist on either last column or last row
+            if row_max > col_max:
+                col_idces = np.argwhere(F[-1] == row_max).flatten()
+                pointer[-1, min(col_idces)+1:] = LEFT
+            elif row_max < col_max:
+                row_idces = np.argwhere(F[:, -1] == col_max).flatten()
+                pointer[min(row_idces)+1:, -1] = UP
+            # special case: max is on last col, last row
+            elif row_max == col_max == F[i, j]:
+                # tiebreaker between row/col is whichever has more max scores
+                # assumption: not counting the corner cell, the last row
+                # and the last column do not have the same number of max scores
+                col_idces = np.argwhere(F[-1] == row_max).flatten()
+                row_idces = np.argwhere(F[:, -1] == col_max).flatten()
+                if len(col_idces) > len(row_idces):
+                    pointer[-1, min(col_idces)+1:] = LEFT
+                    for cid in col_idces:
+                        ij_pairs.append((max_i, cid))
+                elif len(col_idces) < len(row_idces):
+                    pointer[min(row_idces)+1:, -1] = UP
+                    for rid in row_idces:
+                        ij_pairs.append((rid, max_j))
+                else:
+                    raise RuntimeError("Unexpected multiple maximum global_cfe"
+                                       " scores.")
+            else:
+                raise RuntimeError("Unexpected global_cfe scenario.")
+        else:
+            # method must be global at this point
+            ij_pairs.append(i, j)
 
+    results = []
+    for cur_i, (i, j) in enumerate(ij_pairs):
         align_j = []
         align_i = []
+        score = F[i, j]
         p = pointer[i, j]
         while p != NONE:
             if p == DIAG:
@@ -169,45 +225,12 @@ def aligner(seqj, seqi, method='global', gap_open=-7, gap_extend=-7,
             p = pointer[i, j]
         align_i = "".join(align_i[::-1])
         align_j = "".join(align_j[::-1])
-        return (AlignmentResult(align_i, align_j, None, None, None)
-                if flip else AlignmentResult(align_j, align_i, None, None,
-                                             None))
-    else:
-        ijs = []
-        if method == "glocal":
-            max_score = F[:, -1].max()
-            maxv_indices = np.argwhere(F[:, -1] == max_score)[0]
-            ijs = [(i, max_j, max_score) for i in maxv_indices][:n_max_return]
-        else:
-            raise NotImplementedError
+        aln = (AlignmentResult(align_i, align_j, i, j, score)
+               if flip else
+               AlignmentResult(align_j, align_i, j, i, score))
 
-        results = []
+        results.append(aln)
+        if n_max_return == 1:
+            break
 
-        for i, j, score in ijs:
-            align_j = []
-            align_i = []
-            p = pointer[i, j]
-            while p != NONE:
-                if p == DIAG:
-                    i -= 1
-                    j -= 1
-                    align_j.append(seqj[j])
-                    align_i.append(seqi[i])
-                elif p == LEFT:
-                    j -= 1
-                    align_j.append(seqj[j])
-                    align_i.append("-")
-                elif p == UP:
-                    i -= 1
-                    align_j.append("-")
-                    align_i.append(seqi[i])
-                else:
-                    raise Exception('wtf!')
-                p = pointer[i, j]
-            align_i = "".join(align_i[::-1])
-            align_j = "".join(align_j[::-1])
-            aln = (AlignmentResult(align_i, align_j, i, j, score)
-                   if flip else AlignmentResult(align_j, align_i, j, i, score))
-            results.append(aln)
-
-        return results
+    return results
