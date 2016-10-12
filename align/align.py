@@ -10,7 +10,7 @@ from .matrix import BLOSUM62
 # Container for alignment result
 AlignmentResult = namedtuple(
     'AlignmentResult',
-    ['seq1', 'seq2', 'pos1', 'pos2', 'score'])
+    ['seq1', 'seq2', 'start1', 'start2', 'score'])
 
 
 def aligner(seqj, seqi, method='global', gap_open=-7, gap_extend=-7,
