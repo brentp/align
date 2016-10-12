@@ -18,6 +18,9 @@ version = '0.0.2'
 with open('README.rst') as src:
     doc = src.read()
 
+with open('HISTORY.rst') as src:
+    history = src.read().replace(".. :changelog:", "").strip()
+
 with open('requirements.txt') as src:
     requirements = [line.strip() for line in src]
 
@@ -28,7 +31,7 @@ setup(name='align',
       version=version,
       cmdclass=cmdclass,
       description="polite, proper sequence alignment",
-      long_description=doc,
+      long_description=doc + "\n\n" + history,
       ext_modules=[
           Extension("align/calign",
                     sources=["align/calign.c"],
