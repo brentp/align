@@ -2,7 +2,7 @@
 
 import unittest
 
-from align import aligner
+from align import AlignmentResult, aligner
 from align.matrix import DNAFULL
 
 
@@ -142,6 +142,16 @@ class TestPotpourri(unittest.TestCase):
         aln, = aligner('PAA', 'PA', method='global_cfe')
         assert list(aln.seq1) == ['P', 'A', 'A']
         assert list(aln.seq2) == ['P', 'A', '-']
+
+    def test_global_cfe4(self):
+        alns = set(aligner('AATGAA', 'AATGAATGAA', method='global_cfe',
+                           matrix=DNAFULL, n_max_return=None))
+        aln1 = AlignmentResult(
+            seq1='AATGAA----', seq2='AATGAATGAA', pos1=0, pos2=0, score=30.0)
+        aln2 = AlignmentResult(
+            seq1='----AATGAA', seq2='AATGAATGAA', pos1=0, pos2=0, score=30.0)
+        assert aln1 in alns, alns
+        assert aln2 in alns, alns
 
         # local
     def test_local1(self):
