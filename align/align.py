@@ -14,7 +14,7 @@ AlignmentResult = namedtuple(
 
 
 def aligner(seqj, seqi, method='global', gap_open=-7, gap_extend=-7,
-            gap_double=-7, matrix=BLOSUM62, n_max_return=1):
+            gap_double=-7, matrix=BLOSUM62, max_hits=1):
     '''Calculates the alignment of two sequences.
 
     The supported 'methods' are:
@@ -41,14 +41,14 @@ def aligner(seqj, seqi, method='global', gap_open=-7, gap_extend=-7,
         - gap_double (``float``) The gap-opening cost if a gap is already open
           in the other sequence.
         - matrix (``dict``) A score matrix dictionary.
-        - n_max_return (``int``) The maximum number of results to return in
+        - max_hits (``int``) The maximum number of results to return in
           case multiple alignments with the same score are found. If set to 1,
           a single ``AlignmentResult`` object is returned. If set to values
           larger than 1, a list containing ``AlignmentResult`` objects are
           returned. If set to `None`, all alignments with the maximum score
           are returned.
     '''
-    assert n_max_return is None or n_max_return > 0
+    assert max_hits is None or max_hits > 0
     NONE, LEFT, UP, DIAG = range(4)  # NONE is 0
     max_j = len(seqj)
     max_i = len(seqi)
@@ -135,14 +135,14 @@ def aligner(seqj, seqi, method='global', gap_open=-7, gap_extend=-7,
     ij_pairs = []
     if method == 'local':
         # max anywhere
-        maxv_indices = np.argwhere(F == F.max())[:n_max_return]
+        maxv_indices = np.argwhere(F == F.max())[:max_hits]
         for index in maxv_indices:
             ij_pairs.append(index)
     elif method == 'glocal':
         # max in last col
         max_score = F[:, -1].max()
         maxi_indices = np.argwhere(F[:, -1] == F[:, -1].max())\
-            .flatten()[:n_max_return]
+            .flatten()[:max_hits]
         for i in maxi_indices:
             ij_pairs.append((i, max_j))
     elif method == 'global_cfe':
@@ -234,7 +234,7 @@ def aligner(seqj, seqi, method='global', gap_open=-7, gap_extend=-7,
                AlignmentResult(align_j, align_i, j, i, score))
 
         results.append(aln)
-        if n_max_return == 1:
+        if max_hits == 1:
             break
 
     return results

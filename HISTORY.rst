@@ -15,7 +15,7 @@ Backwards incompatible changes since version 0.0.2:
       sequences, also contains the alignment start positions and the alignment
       score.
 
-    * A new argument, ``n_max_return``, is added to the ``aligner``. This
+    * A new argument, ``max_hits``, is added to the ``aligner``. This
       determines the maximum number of alignments to return in case there
       are multiple optimal alignments (i.e. alignment with the same maximum
       score). The default value is 1. When set to ``None``, all optimal

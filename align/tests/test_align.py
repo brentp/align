@@ -183,7 +183,7 @@ class TestGlobalCFE(unittest.TestCase):
 
     def test_global_cfe4(self):
         alns = set(aligner('AATGAA', 'AATGAATGAA', method=self.method,
-                           matrix=DNAFULL, n_max_return=None))
+                           matrix=DNAFULL, max_hits=None))
         aln1 = AlignmentResult(
             seq1='AATGAA----', seq2='AATGAATGAA', pos1=0, pos2=0, score=30.0)
         aln2 = AlignmentResult(
