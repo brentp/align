@@ -153,11 +153,13 @@ def aligner(seqj, seqi, method='global', gap_open=-7, gap_extend=-7,
         if row_max > col_max:
             col_idces = np.argwhere(F[-1] == row_max).flatten()
             pointer[-1, min(col_idces)+1:] = LEFT
-            ij_pairs.append((i, j))
+            for cid in col_idces:
+                ij_pairs.append((i, cid))
         elif row_max < col_max:
             row_idces = np.argwhere(F[:, -1] == col_max).flatten()
             pointer[min(row_idces)+1:, -1] = UP
-            ij_pairs.append((i, j))
+            for rid in row_idces:
+                ij_pairs.append((rid, j))
         # special case: max is on last row, last col
         elif row_max == col_max == F[i, j]:
             # check if max score also exist on other cells in last row
