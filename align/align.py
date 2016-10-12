@@ -48,7 +48,7 @@ def aligner(seqj, seqi, method='global', gap_open=-7, gap_extend=-7,
           returned. If set to `None`, all alignments with the maximum score
           are returned.
     """
-    assert n_max_return > 0 or n_max_return is None
+    assert n_max_return is None or n_max_return > 0
     NONE, LEFT, UP, DIAG = range(4)  # NONE is 0
     max_j = len(seqj)
     max_i = len(seqi)
