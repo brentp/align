@@ -19,7 +19,7 @@ with open('README.rst') as src:
     doc = src.read()
 
 with open('HISTORY.rst') as src:
-    history = src.read().replace(".. :changelog:", "").strip()
+    history = src.read().replace('.. :changelog:', '').strip()
 
 with open('requirements.txt') as src:
     requirements = [line.strip() for line in src]
@@ -30,12 +30,12 @@ with open('requirements-dev.txt') as src:
 setup(name='align',
       version=version,
       cmdclass=cmdclass,
-      description="polite, proper sequence alignment",
-      long_description=doc + "\n\n" + history,
+      description='polite, proper sequence alignment',
+      long_description=doc + '\n\n' + history,
       ext_modules=[
-          Extension("align/calign",
-                    sources=["align/calign.c"],
-                    include_dirs=[np_include, "align"])],
+          Extension('align/calign',
+                    sources=['align/calign.c'],
+                    include_dirs=[np_include, 'align'])],
       keywords='sequence bioinformatics alignment text',
       url='http://github.com/brentp/align/',
       author='brentp',

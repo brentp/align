@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-__all__ = ["DNAFULL", "BLOSUM62"]
+__all__ = ['DNAFULL', 'BLOSUM62']
 
 _NUCL_LETTERS = [
     'A', 'T', 'G', 'C', 'U',        # non-ambiguous letters
