@@ -158,20 +158,31 @@ def aligner(seqj, seqi, method='global', gap_open=-7, gap_extend=-7,
             row_idces = np.argwhere(F[:, -1] == col_max).flatten()
             pointer[min(row_idces)+1:, -1] = UP
             ij_pairs.append((i, j))
-        # special case: max is on last col, last row
+        # special case: max is on last row, last col
         elif row_max == col_max == F[i, j]:
-            # tiebreaker between row/col is whichever has more max scores
-            # assumption: not counting the corner cell, the last row
-            # and the last column do not have the same number of max scores
+            # check if max score also exist on other cells in last row
+            # or last col. we expect only one of the case.
             col_idces = np.argwhere(F[-1] == row_max).flatten()
             row_idces = np.argwhere(F[:, -1] == col_max).flatten()
-            if len(col_idces) > len(row_idces):
+            ncol_idces = len(col_idces)
+            nrow_idces = len(row_idces)
+
+            # tiebreaker between row/col is whichever has more max scores
+            if ncol_idces > nrow_idces:
+                diag_pointer = pointer[i, j] == DIAG
                 pointer[-1, min(col_idces)+1:] = LEFT
-                ij_pairs.append((i, j))
-            elif len(col_idces) < len(row_idces):
+                if diag_pointer:
+                    pointer[i, j] = DIAG
+                for cid in col_idces:
+                    ij_pairs.append((i, cid))
+            elif ncol_idces < nrow_idces:
+                diag_pointer = pointer[i, j] == DIAG
                 pointer[min(row_idces)+1:, -1] = UP
-                ij_pairs.append((i, j))
-            elif len(col_idces) == len(row_idces) == 1:
+                if diag_pointer:
+                    pointer[i, j] = DIAG
+                for rid in row_idces:
+                    ij_pairs.append((rid, j))
+            elif ncol_idces == nrow_idces == 1:
                 ij_pairs.append((i, j))
             else:
                 raise RuntimeError("Unexpected multiple maximum global_cfe"
@@ -188,6 +199,17 @@ def aligner(seqj, seqi, method='global', gap_open=-7, gap_extend=-7,
         align_i = []
         score = F[i, j]
         p = pointer[i, j]
+
+        # special case for global_cfe ~ one cell may contain multiple pointer
+        # directions
+        if method == 'global_cfe':
+            if i < max_i:
+                align_i.extend([c for c in seqi[i:][::-1]])
+                align_j.extend(['-'] * (max_i - i))
+            elif j < max_j:
+                align_i.extend(['-'] * (max_j - j))
+                align_j.extend([c for c in seqj[j:][::-1]])
+
         while p != NONE:
             if p == DIAG:
                 i -= 1
