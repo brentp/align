@@ -19,7 +19,9 @@ Backwards incompatible changes since version 0.0.2:
       determines the maximum number of alignments to return in case there
       are multiple optimal alignments (i.e. alignment with the same maximum
       score). The default value is 1. When set to ``None``, all optimal
-      alignments are returned. This also changes the return type of
-      ``aligner`` to be a list.
+      alignments are returned, except for when the method is ``global``.
+      In this case, only one optimal alignment is returned. This also changes
+      the return type of ``aligner`` to be a list, regardless of how many
+      alignments are returned.
 
 Additionally, several internal code refactor were done.
