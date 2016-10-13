@@ -210,6 +210,8 @@ class TestGlobal(unittest.TestCase):
         assert aln.seq2 == '-PREKRLI---CAN--', aln
         assert aln.start1 == 0, aln
         assert aln.start2 == 0, aln
+        assert aln.end1 == 13, aln
+        assert aln.end2 == 10, aln
         assert aln.score == 34.5, aln
 
     def test_global17(self):
@@ -221,6 +223,8 @@ class TestGlobal(unittest.TestCase):
         assert aln.seq2 == '-PREK', aln
         assert aln.start1 == 0, aln
         assert aln.start2 == 0, aln
+        assert aln.end1 == 4, aln
+        assert aln.end2 == 4, aln
         assert aln.score == 0.0, aln
 
     def test_global18(self):
@@ -232,6 +236,8 @@ class TestGlobal(unittest.TestCase):
         assert aln.seq2 == 'R-RER', aln
         assert aln.start1 == 0, aln
         assert aln.start2 == 0, aln
+        assert aln.end1 == 4, aln
+        assert aln.end2 == 4, aln
         assert aln.score == 13.0, aln
 
     def test_global19(self):
@@ -243,6 +249,8 @@ class TestGlobal(unittest.TestCase):
         assert aln.seq2 == 'TAATTC', aln
         assert aln.start1 == 0, aln
         assert aln.start2 == 0, aln
+        assert aln.end1 == 4, aln
+        assert aln.end2 == 6, aln
         assert aln.score == 6.0, aln
 
     def test_global20(self):
