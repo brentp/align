@@ -10,7 +10,8 @@ from .matrix import BLOSUM62
 # Container for alignment result
 AlignmentResult = namedtuple(
     'AlignmentResult',
-    ['seq1', 'seq2', 'start1', 'start2', 'score'])
+    ['seq1', 'seq2', 'start1', 'start2',
+     'end1', 'end2', 'score'])
 
 
 def aligner(seqj, seqi, method='global', gap_open=-7, gap_extend=-7,
@@ -192,6 +193,12 @@ def aligner(seqj, seqi, method='global', gap_open=-7, gap_extend=-7,
         score = F[i, j]
         p = pointer[i, j]
 
+        # mimic Python's coord system
+        if method.startswith("global"):
+            end_i, end_j = max_i, max_j
+        else:
+            end_i, end_j = i, j
+
         # special case for global_cfe ~ one cell may contain multiple pointer
         # directions
         if method == 'global_cfe':
@@ -221,9 +228,9 @@ def aligner(seqj, seqi, method='global', gap_open=-7, gap_extend=-7,
             p = pointer[i, j]
         align_i = ''.join(align_i[::-1])
         align_j = ''.join(align_j[::-1])
-        aln = (AlignmentResult(align_i, align_j, i, j, score)
+        aln = (AlignmentResult(align_i, align_j, i, j, end_i, end_j, score)
                if flip else
-               AlignmentResult(align_j, align_i, j, i, score))
+               AlignmentResult(align_j, align_i, j, i, end_j, end_i, score))
 
         results.append(aln)
         if max_hits == 1:

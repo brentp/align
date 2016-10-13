@@ -19,6 +19,8 @@ class TestGlobal(unittest.TestCase):
         assert aln.seq2 == 'WEW', aln
         assert aln.start1 == 0, aln
         assert aln.start2 == 0, aln
+        assert aln.end1 == 2, aln
+        assert aln.end2 == 3, aln
         assert aln.score == 15.0, aln
 
     def test_global2(self):
@@ -30,6 +32,8 @@ class TestGlobal(unittest.TestCase):
         assert aln.seq2 == 'WEW', aln
         assert aln.start1 == 0, aln
         assert aln.start2 == 0, aln
+        assert aln.end1 == 2, aln
+        assert aln.end2 == 3, aln
         assert aln.score == -78.0, aln
 
     def test_global3(self):
@@ -39,6 +43,8 @@ class TestGlobal(unittest.TestCase):
         assert aln.seq2 == 'A', aln
         assert aln.start1 == 0, aln
         assert aln.start2 == 0, aln
+        assert aln.end1 == 1, aln
+        assert aln.end2 == 1, aln
         assert aln.score == 4.0, aln
 
     def test_global4(self):
@@ -48,6 +54,8 @@ class TestGlobal(unittest.TestCase):
         assert aln.seq2 == 'K', aln
         assert aln.start1 == 0, aln
         assert aln.start2 == 0, aln
+        assert aln.end1 == 1, aln
+        assert aln.end2 == 1, aln
         assert aln.score == 2.0, aln
 
     def test_global5(self):
@@ -59,6 +67,8 @@ class TestGlobal(unittest.TestCase):
         assert aln.seq2 == 'AR', aln
         assert aln.start1 == 0, aln
         assert aln.start2 == 0, aln
+        assert aln.end1 == 1, aln
+        assert aln.end2 == 2, aln
         assert aln.score == -2.0, aln
 
     def test_global6(self):
@@ -70,6 +80,8 @@ class TestGlobal(unittest.TestCase):
         assert aln.seq2 == '-R', aln
         assert aln.start1 == 0, aln
         assert aln.start2 == 0, aln
+        assert aln.end1 == 2, aln
+        assert aln.end2 == 1, aln
         assert aln.score == -2.0, aln
 
     def test_global7(self):
@@ -81,6 +93,8 @@ class TestGlobal(unittest.TestCase):
         assert aln.seq2 == 'RA', aln
         assert aln.start1 == 0, aln
         assert aln.start2 == 0, aln
+        assert aln.end1 == 2, aln
+        assert aln.end2 == 2, aln
         assert aln.score == -2.0, aln
 
     def test_global8(self):
@@ -92,6 +106,8 @@ class TestGlobal(unittest.TestCase):
         assert aln.seq2 == '-RA', aln
         assert aln.start1 == 0, aln
         assert aln.start2 == 0, aln
+        assert aln.end1 == 2, aln
+        assert aln.end2 == 2, aln
         assert aln.score == -1.0, aln
 
     def test_global9(self):
@@ -103,6 +119,8 @@ class TestGlobal(unittest.TestCase):
         assert aln.seq2 == 'R-R', aln
         assert aln.start1 == 0, aln
         assert aln.start2 == 0, aln
+        assert aln.end1 == 3, aln
+        assert aln.end2 == 2, aln
         assert aln.score == 7.0, aln
 
     def test_global10(self):
@@ -114,6 +132,8 @@ class TestGlobal(unittest.TestCase):
         assert aln.seq2 == 'R-R', aln
         assert aln.start1 == 0, aln
         assert aln.start2 == 0, aln
+        assert aln.end1 == 3, aln
+        assert aln.end2 == 2, aln
         assert aln.score == 0.0, aln
 
     def test_global11(self):
@@ -125,6 +145,8 @@ class TestGlobal(unittest.TestCase):
         assert aln.seq2 == 'R--R', aln
         assert aln.start1 == 0, aln
         assert aln.start2 == 0, aln
+        assert aln.end1 == 4, aln
+        assert aln.end2 == 2, aln
         assert aln.score == 0.0, aln
 
     def test_global12(self):
@@ -136,6 +158,8 @@ class TestGlobal(unittest.TestCase):
         assert aln.seq2 == 'RER', aln
         assert aln.start1 == 0, aln
         assert aln.start2 == 0, aln
+        assert aln.end1 == 3, aln
+        assert aln.end2 == 3, aln
         assert aln.score == 7., aln
 
     def test_global13(self):
@@ -147,6 +171,8 @@ class TestGlobal(unittest.TestCase):
         assert aln.seq2 == 'R-ER', aln
         assert aln.start1 == 0, aln
         assert aln.start2 == 0, aln
+        assert aln.end1 == 3, aln
+        assert aln.end2 == 3, aln
         assert aln.score == 8.0, aln
 
     def test_global14(self):
@@ -158,6 +184,8 @@ class TestGlobal(unittest.TestCase):
         assert aln.seq2 == 'R-EER', aln
         assert aln.start1 == 0, aln
         assert aln.start2 == 0, aln
+        assert aln.end1 == 3, aln
+        assert aln.end2 == 4, aln
         assert aln.score == 7.0, aln
 
     def test_global15(self):
@@ -169,6 +197,8 @@ class TestGlobal(unittest.TestCase):
         assert aln.seq2 == 'AGEBAMAM', aln
         assert aln.start1 == 0, aln
         assert aln.start2 == 0, aln
+        assert aln.end1 == 6, aln
+        assert aln.end2 == 8, aln
         assert aln.score == 16.0, aln
 
     def test_global16(self):
@@ -224,6 +254,8 @@ class TestGlobal(unittest.TestCase):
         assert aln.seq2 == 'WRR', aln
         assert aln.start1 == 0, aln
         assert aln.start2 == 0, aln
+        assert aln.end1 == 2, aln
+        assert aln.end2 == 3, aln
         assert aln.score == 9.0, aln
 
     def test_global21(self):
@@ -235,6 +267,8 @@ class TestGlobal(unittest.TestCase):
         assert aln.seq2 == 'A-P', aln
         assert aln.start1 == 0, aln
         assert aln.start2 == 0, aln
+        assert aln.end1 == 3, aln
+        assert aln.end2 == 2, aln
         assert aln.score == 4.0, aln
 
     def test_global22(self):
@@ -246,6 +280,8 @@ class TestGlobal(unittest.TestCase):
         assert aln.seq2 == 'PA-', aln
         assert aln.start1 == 0, aln
         assert aln.start2 == 0, aln
+        assert aln.end1 == 3, aln
+        assert aln.end2 == 2, aln
         assert aln.score == 4.0, aln
 
     def test_global23(self):
@@ -257,6 +293,8 @@ class TestGlobal(unittest.TestCase):
         assert aln.seq2 == 'TAAT--', aln
         assert aln.start1 == 0, aln
         assert aln.start2 == 0, aln
+        assert aln.end1 == 6, aln
+        assert aln.end2 == 4, aln
         assert aln.score == 9.0, aln
 
     def test_global24(self):
@@ -268,6 +306,8 @@ class TestGlobal(unittest.TestCase):
         assert aln.seq2 == 'PELICAN--', aln
         assert aln.start1 == 0, aln
         assert aln.start2 == 0, aln
+        assert aln.end1 == 9, aln
+        assert aln.end2 == 7, aln
         assert aln.score == 8.0, aln
 
     def test_global25(self):
@@ -279,6 +319,8 @@ class TestGlobal(unittest.TestCase):
         assert aln.seq2 == 'CELECANTH', aln
         assert aln.start1 == 0, aln
         assert aln.start2 == 0, aln
+        assert aln.end1 == 7, aln
+        assert aln.end2 == 9, aln
         assert aln.score == 8.0, aln
 
     def test_global26(self):
@@ -291,6 +333,8 @@ class TestGlobal(unittest.TestCase):
         assert aln.seq2 == 'ACEBAN--', aln
         assert aln.start1 == 0, aln
         assert aln.start2 == 0, aln
+        assert aln.end1 == 8, aln
+        assert aln.end2 == 6, aln
         assert aln.score == 17.0, aln
 
 
@@ -307,6 +351,8 @@ class TestGlobalCFE(unittest.TestCase):
         assert aln.seq2 == 'TAATTC', aln
         assert aln.start1 == 0, aln
         assert aln.start2 == 0, aln
+        assert aln.end1 == 4, aln
+        assert aln.end2 == 6, aln
         assert aln.score == 20.0, aln
 
     def test_global_cfe2(self):
@@ -318,6 +364,8 @@ class TestGlobalCFE(unittest.TestCase):
         assert aln.seq2 == '--TAAT', aln
         assert aln.start1 == 0, aln
         assert aln.start2 == 0, aln
+        assert aln.end1 == 6, aln
+        assert aln.end2 == 4, aln
         assert aln.score == 20.0, aln
 
     def test_global_cfe3(self):
@@ -329,6 +377,8 @@ class TestGlobalCFE(unittest.TestCase):
         assert aln.seq2 == 'PA-', aln
         assert aln.start1 == 0, aln
         assert aln.start2 == 0, aln
+        assert aln.end1 == 3, aln
+        assert aln.end2 == 2, aln
         assert aln.score == 11.0, aln
 
     def test_global_cfe4(self):
@@ -336,9 +386,11 @@ class TestGlobalCFE(unittest.TestCase):
                        matrix=DNAFULL, max_hits=None)
         assert len(alns) == 2, alns
         aln1 = AlignmentResult(
-            seq1='AATGAA----', seq2='AATGAATGAA', start1=0, start2=0, score=30.0)
+            seq1='AATGAA----', seq2='AATGAATGAA', start1=0, start2=0,
+            end1=6, end2=10, score=30.0)
         aln2 = AlignmentResult(
-            seq1='----AATGAA', seq2='AATGAATGAA', start1=0, start2=0, score=30.0)
+            seq1='----AATGAA', seq2='AATGAATGAA', start1=0, start2=0,
+            end1=6, end2=10, score=30.0)
         assert aln1 in alns, alns
         assert aln2 in alns, alns
 
@@ -352,6 +404,8 @@ class TestGlobalCFE(unittest.TestCase):
         assert aln.seq2 == '-------------CCTGCGCACCCC-------------------', aln
         assert aln.start1 == 0, aln
         assert aln.start2 == 0, aln
+        assert aln.end1 == 43, aln
+        assert aln.end2 == 12, aln
         assert aln.score == 39.0, aln
 
 
@@ -368,6 +422,8 @@ class TestLocal(unittest.TestCase):
         assert aln.seq2 == 'TAAT', aln
         assert aln.start1 == 2, aln
         assert aln.start2 == 0, aln
+        assert aln.end1 == 6, aln
+        assert aln.end2 == 4, aln
         assert aln.score == 20.0, aln
 
     def test_local2(self):
@@ -379,6 +435,8 @@ class TestLocal(unittest.TestCase):
         assert aln.seq2 == 'TAAT', aln
         assert aln.start1 == 2, aln
         assert aln.start2 == 0, aln
+        assert aln.end1 == 6, aln
+        assert aln.end2 == 4, aln
         assert aln.score == 20.0, aln
 
     def test_local3(self):
@@ -389,6 +447,8 @@ class TestLocal(unittest.TestCase):
         assert aln.seq2 == 'A', aln
         assert aln.start1 == 0, aln
         assert aln.start2 == 0, aln
+        assert aln.end1 == 1, aln
+        assert aln.end2 == 1, aln
         assert aln.score == 4.0, aln
 
     def test_local4(self):
@@ -400,6 +460,8 @@ class TestLocal(unittest.TestCase):
         assert aln.seq2 == 'R', aln
         assert aln.start1 == 0, aln
         assert aln.start2 == 1, aln
+        assert aln.end1 == 1, aln
+        assert aln.end2 == 2, aln
         assert aln.score == 5.0, aln
 
     def test_local5(self):
@@ -407,9 +469,9 @@ class TestLocal(unittest.TestCase):
                        max_hits=None)
         assert len(alns) == 2, alns
         aln1 = AlignmentResult(seq1='RR', seq2='RR', start1=0, start2=0,
-                               score=10.0)
+                               end1=2, end2=2, score=10.0)
         aln2 = AlignmentResult(seq1='RR', seq2='RR', start1=1, start2=0,
-                               score=10.0)
+                               end1=3, end2=2, score=10.0)
         assert aln1 in alns, alns
         assert aln2 in alns, alns
 
@@ -422,6 +484,8 @@ class TestLocal(unittest.TestCase):
         assert aln.seq2 == 'YNCH', aln
         assert aln.start1 == 1, aln
         assert aln.start2 == 0, aln
+        assert aln.end1 == 5, aln
+        assert aln.end2 == 4, aln
         assert aln.score == 30.0, aln
 
     def test_local7(self):
@@ -433,6 +497,8 @@ class TestLocal(unittest.TestCase):
         assert aln.seq2 == 'P', aln
         assert aln.start1 == 2, aln
         assert aln.start2 == 1, aln
+        assert aln.end1 == 3, aln
+        assert aln.end2 == 2, aln
         assert aln.score == 7.0, aln
 
     def test_local8(self):
@@ -444,6 +510,8 @@ class TestLocal(unittest.TestCase):
         assert aln.seq2 == 'PA', aln
         assert aln.start1 == 0, aln
         assert aln.start2 == 0, aln
+        assert aln.end1 == 2, aln
+        assert aln.end2 == 2, aln
         assert aln.score == 11.0, aln
 
 
@@ -460,6 +528,8 @@ class TestGlocal(unittest.TestCase):
         assert aln.seq2 == 'TAAT', aln
         assert aln.start1 == 3, aln
         assert aln.start2 == 0, aln
+        assert aln.end1 == 7, aln
+        assert aln.end2 == 4, aln
         assert aln.score == 20.0, aln
 
     def test_glocal2(self):
@@ -471,6 +541,8 @@ class TestGlocal(unittest.TestCase):
         assert aln.seq2 == 'TATAT', aln
         assert aln.start1 == 3, aln
         assert aln.start2 == 0, aln
+        assert aln.end1 == 7, aln
+        assert aln.end2 == 5, aln
         assert aln.score == 19.0, aln
 
     def test_glocal3(self):
@@ -483,6 +555,8 @@ class TestGlocal(unittest.TestCase):
         assert aln.seq2 == 'CCTATAT', aln
         assert aln.start1 == 0, aln
         assert aln.start2 == 0, aln
+        assert aln.end1 == 5, aln
+        assert aln.end2 == 7, aln
         assert aln.score == 10.0, aln
 
     def test_glocal4(self):
@@ -495,6 +569,8 @@ class TestGlocal(unittest.TestCase):
         assert aln.seq2 == '--TATAT', aln
         assert aln.start1 == 0, aln
         assert aln.start2 == 0, aln
+        assert aln.end1 == 7, aln
+        assert aln.end2 == 5, aln
         assert aln.score == 10.0, aln
 
 

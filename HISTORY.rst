@@ -12,8 +12,8 @@ Backwards incompatible changes since version 0.0.2:
       The pure Python implementation is based on the ``namedtuple`` class.
 
     * The ``AlignmentResult`` object, in addition to containing the aligned
-      sequences, also contains the alignment start positions and the alignment
-      score.
+      sequences, also contains the alignment start positions, end positions,
+      and the alignment score.
 
     * A new argument, ``max_hits``, is added to the ``aligner``. This
       determines the maximum number of alignments to return in case there
