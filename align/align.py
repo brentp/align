@@ -154,11 +154,11 @@ def aligner(seqj, seqi, method='global', gap_open=-7, gap_extend=-7,
         col_max = F[:, -1].max()
         # expecting max to exist on either last column or last row
         if row_max > col_max:
-            col_idces = np.argwhere(F[-1] == row_max).flatten()
+            col_idces = np.argwhere(F[-1] == row_max).flatten()[:max_hits]
             for cid in col_idces:
                 ij_pairs.append((i, cid))
         elif row_max < col_max:
-            row_idces = np.argwhere(F[:, -1] == col_max).flatten()
+            row_idces = np.argwhere(F[:, -1] == col_max).flatten()[:max_hits]
             for rid in row_idces:
                 ij_pairs.append((rid, j))
         # special case: max is on last row, last col
@@ -172,10 +172,10 @@ def aligner(seqj, seqi, method='global', gap_open=-7, gap_extend=-7,
 
             # tiebreaker between row/col is whichever has more max scores
             if ncol_idces > nrow_idces:
-                for cid in col_idces:
+                for cid in col_idces[:max_hits]:
                     ij_pairs.append((i, cid))
             elif ncol_idces < nrow_idces:
-                for rid in row_idces:
+                for rid in row_idces[:max_hits]:
                     ij_pairs.append((rid, j))
             elif ncol_idces == nrow_idces == 1:
                 ij_pairs.append((i, j))
@@ -247,7 +247,5 @@ def aligner(seqj, seqi, method='global', gap_open=-7, gap_extend=-7,
                                n_gaps_j, n_gaps_i, n_mmatch, score))
 
         results.append(aln)
-        if max_hits == 1:
-            break
 
     return results
