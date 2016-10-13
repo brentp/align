@@ -152,12 +152,10 @@ def aligner(seqj, seqi, method='global', gap_open=-7, gap_extend=-7,
         # expecting max to exist on either last column or last row
         if row_max > col_max:
             col_idces = np.argwhere(F[-1] == row_max).flatten()
-            pointer[-1, min(col_idces)+1:] = LEFT
             for cid in col_idces:
                 ij_pairs.append((i, cid))
         elif row_max < col_max:
             row_idces = np.argwhere(F[:, -1] == col_max).flatten()
-            pointer[min(row_idces)+1:, -1] = UP
             for rid in row_idces:
                 ij_pairs.append((rid, j))
         # special case: max is on last row, last col
@@ -171,17 +169,9 @@ def aligner(seqj, seqi, method='global', gap_open=-7, gap_extend=-7,
 
             # tiebreaker between row/col is whichever has more max scores
             if ncol_idces > nrow_idces:
-                diag_pointer = pointer[i, j] == DIAG
-                pointer[-1, min(col_idces)+1:] = LEFT
-                if diag_pointer:
-                    pointer[i, j] = DIAG
                 for cid in col_idces:
                     ij_pairs.append((i, cid))
             elif ncol_idces < nrow_idces:
-                diag_pointer = pointer[i, j] == DIAG
-                pointer[min(row_idces)+1:, -1] = UP
-                if diag_pointer:
-                    pointer[i, j] = DIAG
                 for rid in row_idces:
                     ij_pairs.append((rid, j))
             elif ncol_idces == nrow_idces == 1:
