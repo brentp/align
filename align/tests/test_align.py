@@ -685,6 +685,54 @@ class TestLocal(unittest.TestCase):
         assert aln1 in alns, alns
         assert aln2 in alns, alns
 
+    def test_local10(self):
+        alns = aligner('AT', 'ATCATCATC', method=self.method,
+                       matrix=DNAFULL, max_hits=None)
+        assert len(alns) == 3, alns
+        aln1 = AlignmentResult(seq1='AT', seq2='AT', start1=0, start2=0,
+                               end1=2, end2=2, n_gaps1=0, n_gaps2=0,
+                               n_mismatches=0, score=10.0)
+        aln2 = AlignmentResult(seq1='AT', seq2='AT', start1=0, start2=3,
+                               end1=2, end2=5, n_gaps1=0, n_gaps2=0,
+                               n_mismatches=0, score=10.0)
+        aln3 = AlignmentResult(seq1='AT', seq2='AT', start1=0, start2=6,
+                               end1=2, end2=8, n_gaps1=0, n_gaps2=0,
+                               n_mismatches=0, score=10.0)
+        assert aln1 in alns, alns
+        assert aln2 in alns, alns
+        assert aln3 in alns, alns
+
+    def test_local11(self):
+        alns = aligner('AT', 'ATCATCATC', method=self.method,
+                       matrix=DNAFULL, max_hits=1)
+        assert len(alns) == 1, alns
+        aln = alns.pop()
+        aln1 = AlignmentResult(seq1='AT', seq2='AT', start1=0, start2=0,
+                               end1=2, end2=2, n_gaps1=0, n_gaps2=0,
+                               n_mismatches=0, score=10.0)
+        aln2 = AlignmentResult(seq1='AT', seq2='AT', start1=0, start2=3,
+                               end1=2, end2=5, n_gaps1=0, n_gaps2=0,
+                               n_mismatches=0, score=10.0)
+        aln3 = AlignmentResult(seq1='AT', seq2='AT', start1=0, start2=6,
+                               end1=2, end2=8, n_gaps1=0, n_gaps2=0,
+                               n_mismatches=0, score=10.0)
+        assert aln == aln1 or aln == aln2 or aln == aln3, alns
+
+    def test_local12(self):
+        alns = aligner('AT', 'ATCATCATC', method=self.method,
+                       matrix=DNAFULL, max_hits=2)
+        assert len(alns) == 2, alns
+        aln1 = AlignmentResult(seq1='AT', seq2='AT', start1=0, start2=0,
+                               end1=2, end2=2, n_gaps1=0, n_gaps2=0,
+                               n_mismatches=0, score=10.0)
+        aln2 = AlignmentResult(seq1='AT', seq2='AT', start1=0, start2=3,
+                               end1=2, end2=5, n_gaps1=0, n_gaps2=0,
+                               n_mismatches=0, score=10.0)
+        aln3 = AlignmentResult(seq1='AT', seq2='AT', start1=0, start2=6,
+                               end1=2, end2=8, n_gaps1=0, n_gaps2=0,
+                               n_mismatches=0, score=10.0)
+        assert len(set([aln1, aln2, aln3]).intersection(alns)) == 2, alns
+
 
 class TestGlocal(unittest.TestCase):
 
