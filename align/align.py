@@ -226,15 +226,15 @@ def aligner(seqj, seqi, method='global', gap_open=-7, gap_extend=-7,
             elif p == LEFT:
                 j -= 1
                 align_j.append(seqj[j])
-                align_i.append(GAP_CHAR)
-                if len(align_i) == 1 or align_i[-2] != GAP_CHAR:
+                if not align_i or align_i[-1] != GAP_CHAR:
                     n_gaps_i += 1
+                align_i.append(GAP_CHAR)
             elif p == UP:
                 i -= 1
-                align_j.append(GAP_CHAR)
                 align_i.append(seqi[i])
-                if len(align_j) == 1 or align_j[-2] != GAP_CHAR:
+                if not align_j or align_j[-1] != GAP_CHAR:
                     n_gaps_j += 1
+                align_j.append(GAP_CHAR)
             else:
                 raise Exception('wtf!')
             p = pointer[i, j]
