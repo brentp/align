@@ -337,6 +337,19 @@ class TestGlobal(unittest.TestCase):
         assert aln.end2 == 6, aln
         assert aln.score == 17.0, aln
 
+    def test_global27(self):
+        alns = aligner('AATCAAG', 'AATGAATGAGTCAATG', method=self.method,
+                       matrix=DNAFULL, max_hits=None)
+        assert len(alns) == 1, alns
+        aln = alns.pop()
+        assert aln.seq1 == 'AAT--------CAA-G', aln
+        assert aln.seq2 == 'AATGAATGAGTCAATG', aln
+        assert aln.start1 == 0, aln
+        assert aln.start2 == 0, aln
+        assert aln.end1 == 7, aln
+        assert aln.end2 == 16, aln
+        assert aln.score == -28.0, aln
+
 
 class TestGlobalCFE(unittest.TestCase):
 
@@ -407,6 +420,19 @@ class TestGlobalCFE(unittest.TestCase):
         assert aln.end1 == 43, aln
         assert aln.end2 == 12, aln
         assert aln.score == 39.0, aln
+
+    def test_global_cfe6(self):
+        alns = aligner('AATCAAG', 'AATGAATGAGTCAATG', method=self.method,
+                       matrix=DNAFULL, max_hits=None)
+        assert len(alns) == 2, alns
+        aln1 = AlignmentResult(seq1='AATCAA-G--------',
+                               seq2='AATGAATGAGTCAATG',
+                               start1=0, start2=0, end1=7, end2=16, score=19.0)
+        aln2 = AlignmentResult(seq1='--------AATCAA-G',
+                               seq2='AATGAATGAGTCAATG',
+                               start1=0, start2=0, end1=7, end2=16, score=19.0)
+        assert aln1 in alns, alns
+        assert aln2 in alns, alns
 
 
 class TestLocal(unittest.TestCase):
@@ -514,6 +540,17 @@ class TestLocal(unittest.TestCase):
         assert aln.end2 == 2, aln
         assert aln.score == 11.0, aln
 
+    def test_local9(self):
+        alns = aligner('AATCAAG', 'AATGAATGAGTCAATG', method=self.method,
+                       matrix=DNAFULL, max_hits=None)
+        assert len(alns) == 2, alns
+        aln1 = AlignmentResult(seq1='AATCAA', seq2='AATGAA', start1=0,
+                               start2=0, end1=6, end2=6, score=21.0)
+        aln2 = AlignmentResult(seq1='AATCAA', seq2='AGTCAA', start1=0,
+                               start2=8, end1=6, end2=14, score=21.0)
+        assert aln1 in alns, alns
+        assert aln2 in alns, alns
+
 
 class TestGlocal(unittest.TestCase):
 
@@ -572,6 +609,17 @@ class TestGlocal(unittest.TestCase):
         assert aln.end1 == 7, aln
         assert aln.end2 == 5, aln
         assert aln.score == 10.0, aln
+
+    def test_glocal5(self):
+        alns = aligner('AATCAAG', 'AATGAATGAGTCAATG', method=self.method,
+                       matrix=DNAFULL, max_hits=None)
+        assert len(alns) == 2, alns
+        aln1 = AlignmentResult(seq1='AATCAA-G', seq2='AATGAATG', start1=0,
+                               start2=0, end1=7, end2=8, score=19.0)
+        aln2 = AlignmentResult(seq1='AATCAA-G', seq2='AGTCAATG', start1=0,
+                               start2=8, end1=7, end2=16, score=19.0)
+        assert aln1 in alns, alns
+        assert aln2 in alns, alns
 
 
 if __name__ == '__main__':
