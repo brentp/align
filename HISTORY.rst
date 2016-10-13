@@ -13,7 +13,8 @@ Backwards incompatible changes since version 0.0.2:
 
     * The ``AlignmentResult`` object, in addition to containing the aligned
       sequences, also contains the alignment start positions, end positions,
-      and the alignment score.
+      number of gaps on each sequence, number of mismatches, and the alignment
+      score.
 
     * A new argument, ``max_hits``, is added to the ``aligner``. This
       determines the maximum number of alignments to return in case there

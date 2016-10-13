@@ -11,7 +11,8 @@ from .matrix import BLOSUM62
 AlignmentResult = namedtuple(
     'AlignmentResult',
     ['seq1', 'seq2', 'start1', 'start2',
-     'end1', 'end2', 'score'])
+     'end1', 'end2', 'n_gaps1', 'n_gaps2',
+     'n_mismatches', 'score'])
 
 
 def aligner(seqj, seqi, method='global', gap_open=-7, gap_extend=-7,
@@ -192,12 +193,12 @@ def aligner(seqj, seqi, method='global', gap_open=-7, gap_extend=-7,
         align_i = []
         score = F[i, j]
         p = pointer[i, j]
-
         # mimic Python's coord system
         if method.startswith("global"):
             end_i, end_j = max_i, max_j
         else:
             end_i, end_j = i, j
+        n_gaps_i, n_gaps_j, n_mmatch = 0, 0, 0
 
         # special case for global_cfe ~ one cell may contain multiple pointer
         # directions
@@ -205,32 +206,44 @@ def aligner(seqj, seqi, method='global', gap_open=-7, gap_extend=-7,
             if i < max_i:
                 align_i.extend([c for c in seqi[i:][::-1]])
                 align_j.extend(['-'] * (max_i - i))
+                n_gaps_j += 1
             elif j < max_j:
                 align_i.extend(['-'] * (max_j - j))
                 align_j.extend([c for c in seqj[j:][::-1]])
+                n_gaps_i += 1
 
         while p != NONE:
             if p == DIAG:
                 i -= 1
                 j -= 1
-                align_j.append(seqj[j])
-                align_i.append(seqi[i])
+                ichar = seqi[i]
+                jchar = seqj[j]
+                if ichar != jchar:
+                    n_mmatch += 1
+                align_j.append(jchar)
+                align_i.append(ichar)
             elif p == LEFT:
                 j -= 1
                 align_j.append(seqj[j])
                 align_i.append('-')
+                if len(align_i) == 1 or align_i[-2] != '-':
+                    n_gaps_i += 1
             elif p == UP:
                 i -= 1
                 align_j.append('-')
                 align_i.append(seqi[i])
+                if len(align_j) == 1 or align_j[-2] != '-':
+                    n_gaps_j += 1
             else:
                 raise Exception('wtf!')
             p = pointer[i, j]
         align_i = ''.join(align_i[::-1])
         align_j = ''.join(align_j[::-1])
-        aln = (AlignmentResult(align_i, align_j, i, j, end_i, end_j, score)
+        aln = (AlignmentResult(align_i, align_j, i, j, end_i, end_j,
+                               n_gaps_i, n_gaps_j, n_mmatch, score)
                if flip else
-               AlignmentResult(align_j, align_i, j, i, end_j, end_i, score))
+               AlignmentResult(align_j, align_i, j, i, end_j, end_i,
+                               n_gaps_j, n_gaps_i, n_mmatch, score))
 
         results.append(aln)
         if max_hits == 1:
