@@ -1,9 +1,13 @@
+# -*- coding: utf-8 -*-
+
+from collections import namedtuple
+
 import numpy as np
-cimport numpy as np
-from libc.string cimport strlen
 import os.path as op
 import sys
 
+cimport numpy as np
+from libc.string cimport strlen
 
 
 cdef extern from "Python.h":
@@ -16,13 +20,18 @@ ctypedef np.int_t DTYPE_INT
 ctypedef np.uint_t DTYPE_UINT
 ctypedef np.float32_t DTYPE_FLOAT
 
+
 cdef inline DTYPE_FLOAT max3(DTYPE_FLOAT a, DTYPE_FLOAT b, DTYPE_FLOAT c):
+    """Returns a maximum of three numpy 32-bit floats."""
     if c > b:
         return c if c > a else a
     return b if b > a else a
 
+
 cdef inline DTYPE_FLOAT max2(DTYPE_FLOAT a, DTYPE_FLOAT b):
+    """Returns a maximum of two numpy 32-bit floats."""
     return b if b > a else a
+
 
 cdef object read_matrix(path, object cache={}):
     """
@@ -34,12 +43,14 @@ cdef object read_matrix(path, object cache={}):
     to a score. this makes it very fast. the cost is in terms of space.
     though it's usually less than 100*100.
     """
-    if path in cache: return cache[path]
+    cdef:
+        np.ndarray[DTYPE_INT, ndim=2] a
+        size_t ai = 0, i
+        int v, mat_size
 
+    if path in cache:
+        return cache[path]
 
-    cdef np.ndarray[DTYPE_INT, ndim=2] a
-    cdef size_t ai = 0, i
-    cdef int v, mat_size
     if not op.exists(path):
         if "/" in path: raise Exception("path for matrix %s doest not exist" \
                                         % path)
@@ -70,14 +81,6 @@ cdef object read_matrix(path, object cache={}):
     return a
 
 
-
-def max_index(array):
-    """
-    """
-    max_value = array.argmax()
-    idx = np.unravel_index(max_value, array.shape)
-    return idx
-
 def aligner(_seqj, _seqi, \
             DTYPE_FLOAT gap_open=-7, DTYPE_FLOAT gap_extend=-7, DTYPE_FLOAT gap_double=-7,\
             method="global", matrix="BLOSUM62"):
@@ -105,18 +108,19 @@ def aligner(_seqj, _seqi, \
           in the other sequence.
         - matrix (``dict``) A score matrix dictionary.
     """
-    cdef int NONE = 0,  LEFT = 1, UP = 2,  DIAG = 3
-    cdef bint flip = 0
+    assert gap_extend <= 0, "gap_extend penalty must be <= 0"
+    assert gap_open <= 0, "gap_open must be <= 0"
 
-    cdef char* seqj = _seqj
-    cdef char* seqi = _seqi
-    cdef size_t align_counter = 0
+    cdef:
+        int NONE = 0,  LEFT = 1, UP = 2,  DIAG = 3
+        bint flip = 0
+        char* seqj = _seqj
+        char* seqi = _seqi
+        size_t align_counter = 0
+        int imethod = {"global": 0, "local": 1, "glocal": 2, "global_cfe": 3}[method]
+        size_t max_j = strlen(seqj)
+        size_t max_i = strlen(seqi)
 
-    cdef int imethod = {"global": 0, "local": 1, "glocal": 2, "global_cfe": 3}[method]
-
-
-    cdef size_t max_j = strlen(seqj)
-    cdef size_t max_i = strlen(seqi)
     if max_i == max_j == 0:
         return "", ""
 
@@ -125,27 +129,23 @@ def aligner(_seqj, _seqi, \
         seqi, seqj = seqj, seqi
         max_i, max_j = max_j, max_i
 
-    cdef char *align_j, *align_i
-    cdef int i, j
-    cdef char ci, cj
-    cdef PyObject *ai, *aj
+    cdef:
+        char *align_j
+        char *align_i
+        int i, j
+        char ci, cj
+        PyObject *ai
+        PyObject *aj
+        np.ndarray[DTYPE_FLOAT, ndim=2] agap_i = np.empty((max_i + 1, max_j + 1), dtype=np.float32)
+        np.ndarray[DTYPE_FLOAT, ndim=2] agap_j = np.empty((max_i + 1, max_j + 1), dtype=np.float32)
+        np.ndarray[DTYPE_FLOAT, ndim=2] score = np.zeros((max_i + 1, max_j + 1), dtype=np.float32)
+        np.ndarray[DTYPE_UINT, ndim=2] pointer = np.zeros((max_i + 1, max_j + 1), dtype=np.uint)
+        np.ndarray[DTYPE_INT, ndim=2] amatrix = read_matrix(matrix)
 
-    assert gap_extend <= 0, "gap_extend penalty must be <= 0"
-    assert gap_open <= 0, "gap_open must be <= 0"
-
-    cdef np.ndarray[DTYPE_FLOAT, ndim=2] agap_i = np.empty((max_i + 1, max_j + 1), dtype=np.float32)
-    cdef np.ndarray[DTYPE_FLOAT, ndim=2] agap_j = np.empty((max_i + 1, max_j + 1), dtype=np.float32)
     agap_i.fill(-np.inf)
     agap_j.fill(-np.inf)
 
-    cdef np.ndarray[DTYPE_FLOAT, ndim=2] score = np.zeros((max_i + 1, max_j + 1), dtype=np.float32)
-
-    cdef np.ndarray[DTYPE_UINT, ndim=2] pointer = np.zeros((max_i + 1, max_j + 1), dtype=np.uint)
-    cdef np.ndarray[DTYPE_INT, ndim=2] amatrix = read_matrix(matrix)
-
-
     # START HERE:
-    #cdef int imethod = {"global": 0, "local": 1, "glocal": 2, "global_cfe": 3}[method]
     if imethod == 0:
         pointer[0, 1:] = LEFT
         pointer[1:, 0] = UP
@@ -180,7 +180,6 @@ def aligner(_seqj, _seqi, \
 
             score[i, j] = max2(0, max_score) if method == 'local' else max_score
 
-            #cdef int imethod = {"global": 0, "local": 1, "glocal": 2, "global_cfe": 3}[method]
             if imethod == 1:
                 if score[i,j] == 0:
                     pass # point[i,j] = NONE
@@ -210,7 +209,8 @@ def aligner(_seqj, _seqi, \
 
     if method == 'local':
         # max anywhere
-        i, j = max_index(score)
+        max_value = score.argmax()
+        i, j = np.unravel_index(max_value, (score.shape[0], score.shape[1]))
     elif method == 'glocal':
         # max in last col
         i, j = (score[:,-1].argmax(), max_j)
@@ -258,32 +258,3 @@ def aligner(_seqj, _seqi, \
         return (<object>ai)[::-1], (<object>aj)[::-1]
     else:
         return (<object>aj)[::-1], (<object>ai)[::-1]
-
-def score_alignment(a, b, int gap_open, int gap_extend, matrix):
-    cdef char *al = a
-    cdef char *bl = b
-    cdef size_t l = strlen(al), i
-    cdef int score = 0, this_score
-    assert strlen(bl) == l, "alignment lengths must be the same"
-    cdef np.ndarray[DTYPE_INT, ndim=2] mat
-    mat = read_matrix(matrix)
-
-    cdef bint gap_started = 0
-
-    for i in range(l):
-        if al[i] == c"-" or bl[i] == c"-":
-            score += gap_extend if gap_started else gap_open
-            gap_started = 1
-        else:
-            this_score = mat[al[i], bl[i]]
-            score += this_score
-            gap_started = 0
-    return score
-
-
-
-if __name__ == '__main__':
-    # global
-    a, b = aligner('WW','WEW', method= 'global')
-    assert a == 'W-W'
-    assert b == 'WEW'
