@@ -10,6 +10,8 @@ cimport numpy as np
 from libc.string cimport strlen
 from cpython.mem cimport PyMem_Malloc, PyMem_Free
 
+from .matrix import BLOSUM62, DNAFULL
+
 
 METHODS = {"global": 0, "local": 1, "glocal": 2, "global_cfe": 3}
 
@@ -30,8 +32,9 @@ cdef inline DTYPE_FLOAT max2(DTYPE_FLOAT a, DTYPE_FLOAT b):
     return b if b > a else a
 
 
-cdef object read_matrix(path, object cache={}):
-    """
+cdef DTYPE_FLOAT[:, :] make_cmatrix(dict pymatrix):
+    """Transforms the given dictionary scoring matrix into a numpy matrix.
+
     so here, we read a matrix in the NCBI format and put
     it into a numpy array. so the score for a 'C' changing
     to an 'A' is stored in the matrix as:
@@ -39,49 +42,33 @@ cdef object read_matrix(path, object cache={}):
     as such, it's a direct array lookup from each pair in the alignment
     to a score. this makes it very fast. the cost is in terms of space.
     though it's usually less than 100*100.
+
     """
     cdef:
-        np.ndarray[DTYPE_INT, ndim=2] a
-        size_t ai = 0, i
-        int v, mat_size
+        DTYPE_INT size = sorted([ord(c) for c in pymatrix.keys()]).pop() + 1
+        DTYPE_FLOAT score
+        np.int8_t c1, c2
+        np.ndarray[DTYPE_FLOAT, ndim=2] cmatrix = np.zeros((size, size),
+                                                           dtype=np.float32)
 
-    if path in cache:
-        return cache[path]
+    for char1 in pymatrix.keys():
+        for char2, score in pymatrix[char1].items():
+            c1 = ord(char1)
+            c2 = ord(char2)
+            cmatrix[c1, c2] = score
 
-    if not op.exists(path):
-        if "/" in path: raise Exception("path for matrix %s doest not exist" \
-                                        % path)
-        mat_path = op.abspath(op.join(op.dirname(__file__), "data"))
-        fh = open(op.join(mat_path, path))
-    else:
-        fh = open(path)
+    return cmatrix
 
 
-    headers = None
-    while headers is None:
-        line = fh.readline().strip()
-        if line[0] == '#': continue
-        headers = [ord(x) for x in line.split(' ') if x]
-    mat_size = max(headers) + 1
-
-    a = np.zeros((mat_size, mat_size), dtype=np.int)
-
-    line = fh.readline()
-    while line:
-        line_vals = [int(x) for x in line[:-1].split(' ')[1:] if x]
-        for ohidx, val in zip(headers, line_vals):
-            a[headers[ai], ohidx] = val
-        ai += 1
-        line = fh.readline()
-
-    cache[path] = a
-    return a
+cdef:
+    DTYPE_FLOAT[:, :] m_BLOSUM62 = make_cmatrix(BLOSUM62)
+    DTYPE_FLOAT[:, :] m_DNAFULL = make_cmatrix(DNAFULL)
 
 
 cdef tuple caligner(
     char* _seqj, char* _seqi, const int imethod,
     const DTYPE_FLOAT gap_open, const DTYPE_FLOAT gap_extend, const DTYPE_FLOAT gap_double,
-    str matrix, const bint flipped):
+    const DTYPE_FLOAT[:, :] amatrix, const bint flipped):
 
     cdef:
         unsigned int NONE = 0, LEFT = 1, UP = 2,  DIAG = 3
@@ -101,7 +88,6 @@ cdef tuple caligner(
         np.ndarray[DTYPE_FLOAT, ndim=2] agap_j = np.empty((max_i + 1, max_j + 1), dtype=np.float32)
         np.ndarray[DTYPE_FLOAT, ndim=2] score = np.zeros((max_i + 1, max_j + 1), dtype=np.float32)
         np.ndarray[DTYPE_UINT, ndim=2] pointer = np.zeros((max_i + 1, max_j + 1), dtype=np.uint)
-        np.ndarray[DTYPE_INT, ndim=2] amatrix = read_matrix(matrix)
 
     agap_i.fill(-np.inf)
     agap_j.fill(-np.inf)
@@ -271,6 +257,17 @@ def aligner(seqj, seqi, method='global', gap_open=-7, gap_extend=-7,
     seq1 = seqi if isinstance(seqi, bytes) else bytes(seqi, 'ascii')
     seq2 = seqj if isinstance(seqj, bytes) else bytes(seqj, 'ascii')
 
+    if isinstance(matrix, basestring):
+        if matrix == "BLOSUM62":
+            score_matrix = m_BLOSUM62
+        elif matrix == "DNAFULL":
+            score_matrix = m_DNAFULL
+        else:
+            raise ValueError("Invalid premade scoring matrix:"
+                             " {0}.".format(matrix))
+    else:
+        score_matrix = make_cmatrix(matrix)
+
     return caligner(seq1, seq2, METHODS[method],
                     gap_open, gap_extend, gap_double,
-                    matrix, flipped)
+                    score_matrix, flipped)
