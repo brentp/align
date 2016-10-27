@@ -8,13 +8,8 @@ import sys
 
 cimport numpy as np
 from libc.string cimport strlen
+from cpython.mem cimport PyMem_Malloc, PyMem_Free
 
-
-cdef extern from "Python.h":
-    ctypedef void PyObject
-    PyObject *PyString_FromStringAndSize(char *, size_t)
-    int _PyString_Resize(PyObject **, size_t)
-    char * PyString_AS_STRING(PyObject *)
 
 ctypedef np.int_t DTYPE_INT
 ctypedef np.uint_t DTYPE_UINT
@@ -130,12 +125,10 @@ def aligner(_seqj, _seqi, \
         max_i, max_j = max_j, max_i
 
     cdef:
-        char *align_j
-        char *align_i
+        unsigned char* align_j
+        unsigned char* align_i
         int i, j
-        char ci, cj
-        PyObject *ai
-        PyObject *aj
+        unsigned char ci, cj
         np.ndarray[DTYPE_FLOAT, ndim=2] agap_i = np.empty((max_i + 1, max_j + 1), dtype=np.float32)
         np.ndarray[DTYPE_FLOAT, ndim=2] agap_j = np.empty((max_i + 1, max_j + 1), dtype=np.float32)
         np.ndarray[DTYPE_FLOAT, ndim=2] score = np.zeros((max_i + 1, max_j + 1), dtype=np.float32)
@@ -224,12 +217,8 @@ def aligner(_seqj, _seqi, \
             pointer[row_idx+1:,-1] = UP
 
     seqlen = max_i + max_j
-    ai = PyString_FromStringAndSize(NULL, seqlen)
-    aj = PyString_FromStringAndSize(NULL, seqlen)
-
-    # use this and PyObject instead of assigning directly...
-    align_j = PyString_AS_STRING(aj)
-    align_i = PyString_AS_STRING(ai)
+    align_i = <unsigned char *>PyMem_Malloc(seqlen * sizeof(unsigned char))
+    align_j = <unsigned char *>PyMem_Malloc(seqlen * sizeof(unsigned char))
 
     p = pointer[i, j]
     while p != NONE:
@@ -241,20 +230,24 @@ def aligner(_seqj, _seqi, \
         elif p == LEFT:
             j -= 1
             align_j[align_counter] = seqj[j]
-            align_i[align_counter] = c"-"
+            align_i[align_counter] = b'-'
         elif p == UP:
             i -= 1
-            align_j[align_counter] = c"-"
+            align_j[align_counter] = b'-'
             align_i[align_counter] = seqi[i]
         else:
             raise Exception('wtf!:pointer: %i', p)
         align_counter += 1
         p = pointer[i, j]
 
-    _PyString_Resize(&aj, align_counter)
-    _PyString_Resize(&ai, align_counter)
-
     if flip:
-        return (<object>ai)[::-1], (<object>aj)[::-1]
+        seq1 = bytes(align_i[:align_counter][::-1])
+        seq2 = bytes(align_j[:align_counter][::-1])
     else:
-        return (<object>aj)[::-1], (<object>ai)[::-1]
+        seq1 = bytes(align_j[:align_counter][::-1])
+        seq2 = bytes(align_i[:align_counter][::-1])
+
+    PyMem_Free(align_i)
+    PyMem_Free(align_j)
+
+    return seq1, seq2
