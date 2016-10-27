@@ -127,7 +127,7 @@ def aligner(_seqj, _seqi, \
     cdef:
         unsigned char* align_j
         unsigned char* align_i
-        int i, j
+        size_t i = 1, j = 1
         unsigned char ci, cj
         np.ndarray[DTYPE_FLOAT, ndim=2] agap_i = np.empty((max_i + 1, max_j + 1), dtype=np.float32)
         np.ndarray[DTYPE_FLOAT, ndim=2] agap_j = np.empty((max_i + 1, max_j + 1), dtype=np.float32)
