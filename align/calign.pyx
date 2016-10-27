@@ -107,7 +107,7 @@ def aligner(_seqj, _seqi, \
     assert gap_open <= 0, "gap_open must be <= 0"
 
     cdef:
-        int NONE = 0,  LEFT = 1, UP = 2,  DIAG = 3
+        unsigned int NONE = 0,  LEFT = 1, UP = 2,  DIAG = 3
         bint flip = 0
         char* seqj = _seqj
         char* seqi = _seqi
@@ -129,6 +129,8 @@ def aligner(_seqj, _seqi, \
         unsigned char* align_i
         size_t i = 1, j = 1
         unsigned char ci, cj
+        DTYPE_UINT p, matrix_max, row_max, col_max
+        DTYPE_FLOAT diag_score, left_score, up_score, max_score
         np.ndarray[DTYPE_FLOAT, ndim=2] agap_i = np.empty((max_i + 1, max_j + 1), dtype=np.float32)
         np.ndarray[DTYPE_FLOAT, ndim=2] agap_j = np.empty((max_i + 1, max_j + 1), dtype=np.float32)
         np.ndarray[DTYPE_FLOAT, ndim=2] score = np.zeros((max_i + 1, max_j + 1), dtype=np.float32)
@@ -171,7 +173,7 @@ def aligner(_seqj, _seqi, \
             up_score   = agap_j[i, j]
             max_score = max3(diag_score, up_score, left_score)
 
-            score[i, j] = max2(0, max_score) if method == 'local' else max_score
+            score[i, j] = max2(0, max_score) if imethod == 1 else max_score
 
             if imethod == 1:
                 if score[i,j] == 0:
@@ -200,14 +202,14 @@ def aligner(_seqj, _seqi, \
                 else:
                     pointer[i,j] = DIAG
 
-    if method == 'local':
+    if imethod == 1:  # local
         # max anywhere
-        max_value = score.argmax()
-        i, j = np.unravel_index(max_value, (score.shape[0], score.shape[1]))
-    elif method == 'glocal':
+        matrix_max = score.argmax()
+        i, j = np.unravel_index(matrix_max, (score.shape[0], score.shape[1]))
+    elif imethod == 2:  # glocal
         # max in last col
         i, j = (score[:,-1].argmax(), max_j)
-    elif method == 'global_cfe':
+    elif imethod == 3:  # global_cfe
         # from i,j to max(max(last row), max(last col)) for free
         row_max, col_idx = score[-1].max(), score[-1].argmax()
         col_max, row_idx = score[:, -1].max(), score[:, -1].argmax()
