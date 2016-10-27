@@ -11,6 +11,8 @@ from libc.string cimport strlen
 from cpython.mem cimport PyMem_Malloc, PyMem_Free
 
 
+METHODS = {"global": 0, "local": 1, "glocal": 2, "global_cfe": 3}
+
 ctypedef np.int_t DTYPE_INT
 ctypedef np.uint_t DTYPE_UINT
 ctypedef np.float32_t DTYPE_FLOAT
@@ -76,55 +78,19 @@ cdef object read_matrix(path, object cache={}):
     return a
 
 
-def aligner(_seqj, _seqi, \
-            DTYPE_FLOAT gap_open=-7, DTYPE_FLOAT gap_extend=-7, DTYPE_FLOAT gap_double=-7,\
-            method="global", matrix="BLOSUM62"):
-    """
-    Calculates the alignment of two sequences. The supported "methods" are
-    "global" for a global Needleman-Wunsh algorithm, "local" for a local
-    Smith-Waterman alignment, "global_cfe" for a global alignment with cost-free
-    ends and "glocal" for an alignment which is "global" only with respect to
-    the shorter sequence, this is also known as a "semi-global" alignment."
-    Returns the aligned (sub)sequences as character arrays.
-
-    Gotoh, O. (1982). J. Mol. Biol. 162, 705-708.
-    Needleman, S. & Wunsch, C. (1970). J. Mol. Biol. 48(3), 443-53.
-    Smith, T.F. & Waterman M.S. (1981). J. Mol. Biol. 147, 195-197.
-
-    Arguments:
-
-        - seqj (``sequence``) First aligned iterable object of symbols.
-        - seqi (``sequence``) Second aligned iterable object of symbols.
-        - method (``str``) Type of alignment: "global", "global_cfe", "local",
-          "glocal".
-        - gap_open (``float``) The gap-opening cost.
-        - gap_extend (``float``) The cost of extending an open gap.
-        - gap_double (``float``) The gap-opening cost if a gap is already open
-          in the other sequence.
-        - matrix (``dict``) A score matrix dictionary.
-    """
-    assert gap_extend <= 0, "gap_extend penalty must be <= 0"
-    assert gap_open <= 0, "gap_open must be <= 0"
+cdef tuple caligner(
+    char* _seqj, char* _seqi, const int imethod,
+    const DTYPE_FLOAT gap_open, const DTYPE_FLOAT gap_extend, const DTYPE_FLOAT gap_double,
+    str matrix, const bint flipped):
 
     cdef:
-        unsigned int NONE = 0,  LEFT = 1, UP = 2,  DIAG = 3
-        bint flip = 0
+        unsigned int NONE = 0, LEFT = 1, UP = 2,  DIAG = 3
+        unsigned char GAP_CHAR = '-'
         char* seqj = _seqj
         char* seqi = _seqi
         size_t align_counter = 0
-        int imethod = {"global": 0, "local": 1, "glocal": 2, "global_cfe": 3}[method]
         size_t max_j = strlen(seqj)
         size_t max_i = strlen(seqi)
-
-    if max_i == max_j == 0:
-        return "", ""
-
-    if max_j > max_i:
-        flip = 1
-        seqi, seqj = seqj, seqi
-        max_i, max_j = max_j, max_i
-
-    cdef:
         unsigned char* align_j
         unsigned char* align_i
         size_t i = 1, j = 1
@@ -232,17 +198,17 @@ def aligner(_seqj, _seqi, \
         elif p == LEFT:
             j -= 1
             align_j[align_counter] = seqj[j]
-            align_i[align_counter] = b'-'
+            align_i[align_counter] = GAP_CHAR
         elif p == UP:
             i -= 1
-            align_j[align_counter] = b'-'
+            align_j[align_counter] = GAP_CHAR
             align_i[align_counter] = seqi[i]
         else:
             raise Exception('wtf!:pointer: %i', p)
         align_counter += 1
         p = pointer[i, j]
 
-    if flip:
+    if flipped:
         seq1 = bytes(align_i[:align_counter][::-1])
         seq2 = bytes(align_j[:align_counter][::-1])
     else:
@@ -253,3 +219,58 @@ def aligner(_seqj, _seqi, \
     PyMem_Free(align_j)
 
     return seq1, seq2
+
+
+def aligner(seqj, seqi, method='global', gap_open=-7, gap_extend=-7,
+            gap_double=-7, matrix="BLOSUM62"):
+    '''Calculates the alignment of two sequences.
+
+    The supported 'methods' are:
+        * 'global' for a global Needleman-Wunsh algorithm
+        * 'local' for a local Smith-Waterman alignment
+        * 'global_cfe' for a global alignment with cost-free ends
+        * 'glocal' for an alignment which is 'global' only with respect to
+          the shorter sequence (also known as a 'semi-global' alignment)
+
+    Returns the aligned (sub)sequences as character arrays.
+
+    Gotoh, O. (1982). J. Mol. Biol. 162, 705-708.
+    Needleman, S. & Wunsch, C. (1970). J. Mol. Biol. 48(3), 443-53.
+    Smith, T.F. & Waterman M.S. (1981). J. Mol. Biol. 147, 195-197.
+
+    Arguments:
+
+        - seqj (``sequence``) First aligned iterable object of symbols.
+        - seqi (``sequence``) Second aligned iterable object of symbols.
+        - method (``str``) Type of alignment: 'global', 'global_cfe', 'local',
+          'glocal'.
+        - gap_open (``float``) The gap-opening cost.
+        - gap_extend (``float``) The cost of extending an open gap.
+        - gap_double (``float``) The gap-opening cost if a gap is already open
+          in the other sequence.
+        - matrix (``dict``) A score matrix dictionary.
+        - max_hits (``int``) The maximum number of results to return in
+          case multiple alignments with the same score are found. If set to 1,
+          a single ``AlignmentResult`` object is returned. If set to values
+          larger than 1, a list containing ``AlignmentResult`` objects are
+          returned. If set to `None`, all alignments with the maximum score
+          are returned.
+    '''
+    assert gap_extend <= 0, "gap_extend penalty must be <= 0"
+    assert gap_open <= 0, "gap_open must be <= 0"
+
+    max_j = len(seqj)
+    max_i = len(seqi)
+    if max_j > max_i:
+        flipped = 1
+        seqi, seqj = seqj, seqi
+        max_i, max_j = max_j, max_i
+    else:
+        flipped = 0
+
+    seq1 = seqi if isinstance(seqi, bytes) else bytes(seqi, 'ascii')
+    seq2 = seqj if isinstance(seqj, bytes) else bytes(seqj, 'ascii')
+
+    return caligner(seq1, seq2, METHODS[method],
+                    gap_open, gap_extend, gap_double,
+                    matrix, flipped)
