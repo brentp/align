@@ -63,25 +63,25 @@ cdef DTYPE_FLOAT[:, :] make_cmatrix(dict pymatrix):
 cdef:
     DTYPE_FLOAT[:, :] m_BLOSUM62 = make_cmatrix(BLOSUM62)
     DTYPE_FLOAT[:, :] m_DNAFULL = make_cmatrix(DNAFULL)
+    unsigned char GAP_CHAR = '-'
+
+cdef enum:
+    NONE = 0, LEFT = 1, UP = 2, DIAG = 3
 
 
 cdef tuple caligner(
-    char* _seqj, char* _seqi, const int imethod,
+    const unsigned char* seqj, const unsigned char* seqi, const int imethod,
     const DTYPE_FLOAT gap_open, const DTYPE_FLOAT gap_extend, const DTYPE_FLOAT gap_double,
     const DTYPE_FLOAT[:, :] amatrix, const bint flipped):
 
     cdef:
-        unsigned int NONE = 0, LEFT = 1, UP = 2,  DIAG = 3
-        unsigned char GAP_CHAR = '-'
-        char* seqj = _seqj
-        char* seqi = _seqi
-        size_t align_counter = 0
-        size_t max_j = strlen(seqj)
-        size_t max_i = strlen(seqi)
         unsigned char* align_j
         unsigned char* align_i
-        size_t i = 1, j = 1
         unsigned char ci, cj
+        size_t max_j = strlen(<char *>seqj)
+        size_t max_i = strlen(<char *>seqi)
+        size_t align_counter = 0
+        size_t i = 1, j = 1
         DTYPE_UINT p, matrix_max, row_max, col_max
         DTYPE_FLOAT diag_score, left_score, up_score, max_score
         np.ndarray[DTYPE_FLOAT, ndim=2] agap_i = np.empty((max_i + 1, max_j + 1), dtype=np.float32)
