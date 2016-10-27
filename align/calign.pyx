@@ -247,15 +247,15 @@ def aligner(seqj, seqi, method='global', gap_open=-7, gap_extend=-7,
 
     max_j = len(seqj)
     max_i = len(seqi)
+    seq1 = seqj if isinstance(seqj, bytes) else bytes(seqj, 'ascii')
+    seq2 = seqi if isinstance(seqi, bytes) else bytes(seqi, 'ascii')
+
     if max_j > max_i:
         flipped = 1
-        seqi, seqj = seqj, seqi
+        seq1, seq2 = seq2, seq1
         max_i, max_j = max_j, max_i
     else:
         flipped = 0
-
-    seq1 = seqi if isinstance(seqi, bytes) else bytes(seqi, 'ascii')
-    seq2 = seqj if isinstance(seqj, bytes) else bytes(seqj, 'ascii')
 
     if isinstance(matrix, basestring):
         if matrix == "BLOSUM62":
