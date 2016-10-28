@@ -358,16 +358,15 @@ def aligner(seqj, seqi, method='global', gap_open=-7, gap_extend=-7,
     else:
         flipped = 0
 
-    if isinstance(matrix, basestring):
-        if matrix == "BLOSUM62":
-            score_matrix = m_BLOSUM62
-        elif matrix == "DNAFULL":
-            score_matrix = m_DNAFULL
-        else:
-            raise ValueError("Invalid premade scoring matrix:"
-                             " {0}.".format(matrix))
-    else:
+    if isinstance(matrix, dict):
         score_matrix = make_cmatrix(matrix)
+    elif matrix == "BLOSUM62":
+        score_matrix = m_BLOSUM62
+    elif matrix == "DNAFULL":
+        score_matrix = m_DNAFULL
+    else:
+        raise ValueError("Invalid premade scoring matrix:"
+                            " {0}.".format(matrix))
 
     return caligner(seq1, seq2, METHODS[method],
                     gap_open, gap_extend, gap_double,
