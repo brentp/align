@@ -84,8 +84,8 @@ cdef list caligner(
         size_t max_j = strlen(<char *>seqj)
         size_t max_i = strlen(<char *>seqi)
         size_t align_counter = 0
-        size_t i = 1, j = 1, idx
-        int ncol_idces, nrow_idces
+        size_t i = 1, j = 1
+        int ncol_idces, nrow_idces, idx
         int end_i, end_j, n_gaps_i, n_gaps_j, n_mmatch
         DTYPE_UINT p
         DTYPE_FLOAT diag_score, left_score, up_score, max_score, aln_score
@@ -254,15 +254,16 @@ cdef list caligner(
         if imethod == 3:
             if i < max_i:
                 n_gaps_j += 1
-                for idx in range(max_i - i):
+                align_counter = max_i - i
+                for idx in range(align_counter):
                     align_j[idx] = GAP_CHAR
-                    align_i[idx] = seqi[-1 * (idx + 1)]
+                    align_i[idx] = seqi[max_i - 1 * idx - 1]
             elif j < max_j:
                 n_gaps_i += 1
-                for idx in range(max_j - j):
+                align_counter = max_j - j
+                for idx in range(align_counter):
                     align_i[idx] = GAP_CHAR
-                    align_j[idx] = seqj[-1 * (idx + 1)]
-
+                    align_j[idx] = seqj[max_j - 1 * idx - 1]
 
         while p != NONE:
             if p == DIAG:
