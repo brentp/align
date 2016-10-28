@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from collections import namedtuple
+from itertools import islice
 
 import numpy as np
 import os.path as op
@@ -10,10 +11,12 @@ cimport numpy as np
 from libc.string cimport strlen
 from cpython.mem cimport PyMem_Malloc, PyMem_Free
 
+from .align import AlignmentResult
 from .matrix import BLOSUM62, DNAFULL
 
 
 METHODS = {"global": 0, "local": 1, "glocal": 2, "global_cfe": 3}
+
 
 ctypedef np.int_t DTYPE_INT
 ctypedef np.uint_t DTYPE_UINT
@@ -69,10 +72,10 @@ cdef enum:
     NONE = 0, LEFT = 1, UP = 2, DIAG = 3
 
 
-cdef tuple caligner(
+cdef list caligner(
     const unsigned char* seqj, const unsigned char* seqi, const int imethod,
     const DTYPE_FLOAT gap_open, const DTYPE_FLOAT gap_extend, const DTYPE_FLOAT gap_double,
-    const DTYPE_FLOAT[:, :] amatrix, const bint flipped):
+    const DTYPE_FLOAT[:, :] amatrix, const bint flipped, max_hits):
 
     cdef:
         unsigned char* align_j
@@ -81,13 +84,17 @@ cdef tuple caligner(
         size_t max_j = strlen(<char *>seqj)
         size_t max_i = strlen(<char *>seqi)
         size_t align_counter = 0
-        size_t i = 1, j = 1
-        DTYPE_UINT p, matrix_max, row_max, col_max
-        DTYPE_FLOAT diag_score, left_score, up_score, max_score
+        size_t i = 1, j = 1, idx
+        int ncol_idces, nrow_idces
+        int end_i, end_j, n_gaps_i, n_gaps_j, n_mmatch
+        DTYPE_UINT p
+        DTYPE_FLOAT diag_score, left_score, up_score, max_score, aln_score
         np.ndarray[DTYPE_FLOAT, ndim=2] agap_i = np.empty((max_i + 1, max_j + 1), dtype=np.float32)
         np.ndarray[DTYPE_FLOAT, ndim=2] agap_j = np.empty((max_i + 1, max_j + 1), dtype=np.float32)
         np.ndarray[DTYPE_FLOAT, ndim=2] score = np.zeros((max_i + 1, max_j + 1), dtype=np.float32)
         np.ndarray[DTYPE_UINT, ndim=2] pointer = np.zeros((max_i + 1, max_j + 1), dtype=np.uint)
+        list indices = [], row_idces = [], col_idces = []
+        list results = [], tracestart_coords = []
 
     agap_i.fill(-np.inf)
     agap_j.fill(-np.inf)
@@ -104,6 +111,8 @@ cdef tuple caligner(
     elif imethod == 2:
         pointer[0, 1:] = LEFT
         score[0, 1:] = gap_open + gap_extend * np.arange(0, max_j, dtype=np.float32)
+
+    cdef DTYPE_FLOAT matrix_max = 0, row_max = score[-1, 0], col_max = score[0, -1]
 
     for i in range(1, max_i + 1):
         ci = seqi[i - 1]
@@ -124,8 +133,10 @@ cdef tuple caligner(
             left_score = agap_i[i, j]
             up_score   = agap_j[i, j]
             max_score = max3(diag_score, up_score, left_score)
+            if imethod == 1:
+                max_score = max2(0, max_score)
 
-            score[i, j] = max2(0, max_score) if imethod == 1 else max_score
+            score[i, j] = max_score
 
             if imethod == 1:
                 if score[i,j] == 0:
@@ -136,6 +147,14 @@ cdef tuple caligner(
                     pointer[i,j] = UP
                 elif max_score == left_score:
                     pointer[i,j] = LEFT
+
+                # Manual tracking of [i, j] coordinates where score is max
+                if max_score > matrix_max:
+                    matrix_max = max_score
+                    indices = [(i, j)]
+                elif max_score == matrix_max:
+                    indices.append((i, j))
+
             elif imethod == 2:
                 # In a semi-global alignment we want to consume as much as
                 # possible of the longer sequence.
@@ -145,6 +164,15 @@ cdef tuple caligner(
                     pointer[i,j] = DIAG
                 elif max_score == left_score:
                     pointer[i,j] = LEFT
+
+                # Manual tracking of [i, j] coordinates where col score is max
+                if j == max_j:
+                    if max_score > col_max:
+                        col_max = max_score
+                        col_idces = [(i, j)]
+                    elif max_score == col_max:
+                        col_idces.append((i, j))
+
             else:
                 # global
                 if max_score == up_score:
@@ -154,61 +182,132 @@ cdef tuple caligner(
                 else:
                     pointer[i,j] = DIAG
 
-    if imethod == 1:  # local
-        # max anywhere
-        matrix_max = score.argmax()
-        i, j = np.unravel_index(matrix_max, (score.shape[0], score.shape[1]))
-    elif imethod == 2:  # glocal
-        # max in last col
-        i, j = (score[:,-1].argmax(), max_j)
-    elif imethod == 3:  # global_cfe
+                if imethod == 3:
+                    # Manual tracking of [i, j] coordinates where col score is max
+                    if j == max_j:
+                        if max_score > col_max:
+                            col_max = max_score
+                            col_idces = [(i, j)]
+                        elif max_score == col_max:
+                            col_idces.append((i, j))
+                    if i == max_i:
+                        if max_score > row_max:
+                            row_max = max_score
+                            row_idces = [(i, j)]
+                        elif max_score == row_max:
+                            row_idces.append((i, j))
+
+    if imethod == 1:
+        for index in islice(indices, max_hits):
+            tracestart_coords.append(index)
+
+    elif imethod == 2:
+        for index in islice(col_idces, max_hits):
+            tracestart_coords.append(index)
+
+    elif imethod == 3:
         # from i,j to max(max(last row), max(last col)) for free
-        row_max, col_idx = score[-1].max(), score[-1].argmax()
-        col_max, row_idx = score[:, -1].max(), score[:, -1].argmax()
+        # expecting max to exist on either last column or last row
         if row_max > col_max:
-            pointer[-1,col_idx+1:] = LEFT
+            for index in islice(row_idces, max_hits):
+                tracestart_coords.append(index)
+        elif row_max < col_max:
+            for index in islice(col_idces, max_hits):
+                tracestart_coords.append(index)
+        # special case: max is on last row, last col
+        elif row_max == col_max == score[max_i, max_j]:
+            ncol_idces = len(col_idces)
+            nrow_idces = len(row_idces)
+            # tiebreaker between row/col is whichever has more max scores
+            if ncol_idces > nrow_idces:
+                for index in islice(col_idces, max_hits):
+                    tracestart_coords.append(index)
+            elif ncol_idces < nrow_idces:
+                for index in islice(row_idces, max_hits):
+                    tracestart_coords.append(index)
+            elif ncol_idces == nrow_idces == 1:
+                tracestart_coords.append((max_i, max_j))
+            else:
+                raise RuntimeError('Unexpected multiple maximum global_cfe'
+                                   ' scores.')
         else:
-            pointer[row_idx+1:,-1] = UP
+            raise RuntimeError('Unexpected global_cfe scenario.')
+    else:
+        # method must be global at this point
+        tracestart_coords.append((max_i, max_j))
 
     seqlen = max_i + max_j
-    align_i = <unsigned char *>PyMem_Malloc(seqlen * sizeof(unsigned char))
-    align_j = <unsigned char *>PyMem_Malloc(seqlen * sizeof(unsigned char))
-
-    p = pointer[i, j]
-    while p != NONE:
-        if p == DIAG:
-            i -= 1
-            j -= 1
-            align_j[align_counter] = seqj[j]
-            align_i[align_counter] = seqi[i]
-        elif p == LEFT:
-            j -= 1
-            align_j[align_counter] = seqj[j]
-            align_i[align_counter] = GAP_CHAR
-        elif p == UP:
-            i -= 1
-            align_j[align_counter] = GAP_CHAR
-            align_i[align_counter] = seqi[i]
+    for i, j in tracestart_coords:
+        if imethod == 0 or imethod == 3:
+            end_i, end_j = max_i, max_j
         else:
-            raise Exception('wtf!:pointer: %i', p)
-        align_counter += 1
+            end_i, end_j = i, j
+        aln_score = score[i, j]
         p = pointer[i, j]
+        n_gaps_i, n_gaps_j, n_mmatch = 0, 0, 0
+        align_counter = 0
+        align_i = <unsigned char *>PyMem_Malloc(seqlen * sizeof(unsigned char))
+        align_j = <unsigned char *>PyMem_Malloc(seqlen * sizeof(unsigned char))
 
-    if flipped:
-        seq1 = bytes(align_i[:align_counter][::-1])
-        seq2 = bytes(align_j[:align_counter][::-1])
-    else:
-        seq1 = bytes(align_j[:align_counter][::-1])
-        seq2 = bytes(align_i[:align_counter][::-1])
+        # special case for global_cfe ~ one cell may contain multiple pointer
+        # directions
+        if imethod == 3:
+            if i < max_i:
+                n_gaps_j += 1
+                for idx in range(max_i - i):
+                    align_j[idx] = GAP_CHAR
+                    align_i[idx] = seqi[-1 * (idx + 1)]
+            elif j < max_j:
+                n_gaps_i += 1
+                for idx in range(max_j - j):
+                    align_i[idx] = GAP_CHAR
+                    align_j[idx] = seqj[-1 * (idx + 1)]
 
-    PyMem_Free(align_i)
-    PyMem_Free(align_j)
 
-    return seq1, seq2
+        while p != NONE:
+            if p == DIAG:
+                i -= 1
+                j -= 1
+                if seqi[i] != seqj[j]:
+                    n_mmatch += 1
+                align_j[align_counter] = seqj[j]
+                align_i[align_counter] = seqi[i]
+            elif p == LEFT:
+                j -= 1
+                align_j[align_counter] = seqj[j]
+                if align_i[align_counter - 1] != GAP_CHAR or align_counter == 0:
+                    n_gaps_i += 1
+                align_i[align_counter] = GAP_CHAR
+            elif p == UP:
+                i -= 1
+                align_i[align_counter] = seqi[i]
+                if align_j[align_counter - 1] != GAP_CHAR or align_counter == 0:
+                    n_gaps_j += 1
+                align_j[align_counter] = GAP_CHAR
+            else:
+                raise Exception('wtf!')
+            p = pointer[i, j]
+            align_counter += 1
+
+        alns_i = bytes(align_i[:align_counter][::-1])
+        alns_j = bytes(align_j[:align_counter][::-1])
+
+        PyMem_Free(align_i)
+        PyMem_Free(align_j)
+
+        aln = (AlignmentResult(alns_i, alns_j, i, j, end_i, end_j,
+                            n_gaps_i, n_gaps_j, n_mmatch, aln_score)
+            if flipped else
+            AlignmentResult(alns_j, alns_i, j, i, end_j, end_i,
+                            n_gaps_j, n_gaps_i, n_mmatch, aln_score))
+
+        results.append(aln)
+
+    return results
 
 
 def aligner(seqj, seqi, method='global', gap_open=-7, gap_extend=-7,
-            gap_double=-7, matrix="BLOSUM62"):
+            gap_double=-7, matrix="BLOSUM62", max_hits=1):
     '''Calculates the alignment of two sequences.
 
     The supported 'methods' are:
@@ -244,6 +343,7 @@ def aligner(seqj, seqi, method='global', gap_open=-7, gap_extend=-7,
     '''
     assert gap_extend <= 0, "gap_extend penalty must be <= 0"
     assert gap_open <= 0, "gap_open must be <= 0"
+    assert max_hits is None or max_hits > 0
 
     max_j = len(seqj)
     max_i = len(seqi)
@@ -270,4 +370,4 @@ def aligner(seqj, seqi, method='global', gap_open=-7, gap_extend=-7,
 
     return caligner(seq1, seq2, METHODS[method],
                     gap_open, gap_extend, gap_double,
-                    score_matrix, flipped)
+                    score_matrix, flipped, max_hits)
