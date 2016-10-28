@@ -1,11 +1,19 @@
 # -*- coding: utf-8 -*-
 
+import sys
 from collections import namedtuple
 
 import numpy as np
 
 from .matrix import BLOSUM62
 
+
+__all__ = ["AlignmentResult", "aligner"]
+
+
+IS_PY2 = False
+if sys.version_info.major == 2:
+    IS_PY2 = True
 
 # Container for alignment result
 AlignmentResult = namedtuple(
@@ -52,7 +60,7 @@ def aligner(seqj, seqi, method='global', gap_open=-7, gap_extend=-7,
     '''
     assert max_hits is None or max_hits > 0
     NONE, LEFT, UP, DIAG = range(4)  # NONE is 0
-    GAP_CHAR = '-'
+    GAP_CHAR = ord('-') if not IS_PY2 else '-'
     max_j = len(seqj)
     max_i = len(seqi)
 
@@ -62,6 +70,9 @@ def aligner(seqj, seqi, method='global', gap_open=-7, gap_extend=-7,
         max_i, max_j = max_j, max_i
     else:
         flip = 0
+
+    seqi = seqi.encode() if not isinstance(seqi, bytes) else seqi
+    seqj = seqj.encode() if not isinstance(seqj, bytes) else seqj
 
     F = np.zeros((max_i + 1, max_j + 1), dtype=np.float32)
     I = np.ndarray((max_i + 1, max_j + 1), dtype=np.float32)
@@ -86,9 +97,9 @@ def aligner(seqj, seqi, method='global', gap_open=-7, gap_extend=-7,
             np.arange(0, max_j, dtype=np.float32)
 
     for i in range(1, max_i + 1):
-        ci = seqi[i - 1]
+        ci = seqi[i - 1:i]
         for j in range(1, max_j + 1):
-            cj = seqj[j - 1]
+            cj = seqj[j - 1:j]
             # I
             I[i, j] = max(
                          F[i, j - 1] + gap_open,
@@ -189,7 +200,7 @@ def aligner(seqj, seqi, method='global', gap_open=-7, gap_extend=-7,
         ij_pairs.append((i, j))
 
     results = []
-    for cur_i, (i, j) in enumerate(ij_pairs):
+    for i, j in ij_pairs:
         align_j = []
         align_i = []
         score = F[i, j]
@@ -238,8 +249,12 @@ def aligner(seqj, seqi, method='global', gap_open=-7, gap_extend=-7,
             else:
                 raise Exception('wtf!')
             p = pointer[i, j]
-        align_i = ''.join(align_i[::-1])
-        align_j = ''.join(align_j[::-1])
+
+        align_i = bytes(align_i[::-1]) \
+            if not IS_PY2 else ''.join(align_i[::-1])
+        align_j = bytes(align_j[::-1]) \
+            if not IS_PY2 else ''.join(align_j[::-1])
+
         aln = (AlignmentResult(align_i, align_j, i, j, end_i, end_j,
                                n_gaps_i, n_gaps_j, n_mmatch, score)
                if flip else
