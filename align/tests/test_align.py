@@ -1,6 +1,10 @@
 # -*- coding: utf-8 -*-
 
-import pyximport; pyximport.install()  # noqa
+import numpy
+import pyximport
+pyximport.install(setup_args={
+    "include_dirs": numpy.get_include(),
+})  # noqa
 
 import unittest
 
