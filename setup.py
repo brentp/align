@@ -4,10 +4,9 @@ from setuptools import setup
 from distutils.extension import Extension
 
 try:
-    from Cython.Distutils import build_ext
-    cmdclass = {'build_ext': build_ext}
+    from Cython.Build import cythonize
 except ImportError:
-    cmdclass = {}
+    cythonize = lambda x: None  # noqa
 
 import numpy
 
@@ -29,13 +28,12 @@ with open('requirements-dev.txt') as src:
 
 setup(name='align',
       version=version,
-      cmdclass=cmdclass,
       description='polite, proper sequence alignment',
       long_description=doc + '\n\n' + history,
-      ext_modules=[
-          Extension('align/calign',
-                    sources=['align/calign.c'],
-                    include_dirs=[np_include, 'align'])],
+      ext_modules=cythonize([
+          Extension('align',
+                    ['align/calign.pyx'],
+                    include_dirs=[np_include])]),
       keywords='sequence bioinformatics alignment text',
       url='http://github.com/brentp/align/',
       author='brentp',
