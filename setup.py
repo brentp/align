@@ -31,7 +31,7 @@ setup(name='align',
       description='polite, proper sequence alignment',
       long_description=doc + '\n\n' + history,
       ext_modules=cythonize([
-          Extension('align',
+          Extension('align.calign',
                     ['align/calign.pyx'],
                     include_dirs=[np_include])]),
       keywords='sequence bioinformatics alignment text',
