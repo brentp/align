@@ -3,3 +3,5 @@ build/
 dist/
 align.egg-info/
 .coverage
+*.c
+*.so
