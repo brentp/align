@@ -7,7 +7,7 @@ python:
   - "2.7"
 
 before_install:
-    - pip install numpy cython
+    - pip install setuptools==18.0
     - pip install -r requirements-dev.txt
 
 install:

@@ -2,8 +2,8 @@
 Align: polite, proper sequence alignment
 ++++++++++++++++++++++++++++++++++++++++
 
-    :Authors: Marcin Cieślik, Brent Pedersen (brentp)
-    :Email: (marcin), bpederse@gmail.com
+    :Authors: Marcin Cieślik, Brent Pedersen (brentp), Wibowo Arindrarto (bow)
+    :Email: (marcin), bpederse@gmail.com, bow@bow.web.id
     :License: BSD
 
 .. contents ::
